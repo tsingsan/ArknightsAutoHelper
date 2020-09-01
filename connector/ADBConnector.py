@@ -158,17 +158,23 @@ class ADBConnector:
             device_name = devices[0][0]
         elif len(devices) > 1:
             logger.info("检测到多台设备")
+            emulator_devices = []
             for i, (serial, status) in enumerate(devices):
                 print("%2d. %s" % (i, serial))
+                if "emulator" in serial:
+                    emulator_devices.append(i)
             num = 0
-            while True:
-                try:
-                    num = int(input("请输入序号选择设备: "))
-                    if not 0 <= num < len(devices):
-                        raise ValueError()
-                    break
-                except ValueError:
-                    logger.error("输入不合法，请重新输入")
+            if len(emulator_devices) == 1:
+                num = emulator_devices[0]
+            else:
+                while True:
+                    try:
+                        num = int(input("请输入序号选择设备: "))
+                        if not 0 <= num < len(devices):
+                            raise ValueError()
+                        break
+                    except ValueError:
+                        logger.error("输入不合法，请重新输入")
             device_name = devices[num][0]
         else:
             raise RuntimeError('找不到可用设备')
