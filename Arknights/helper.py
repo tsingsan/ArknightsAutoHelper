@@ -532,6 +532,8 @@ class ArknightsHelper(object):
         if len(task_list) == 0:
             logger.fatal("任务清单为空!")
 
+        logger.info(task_list)
+
         for c_id, count in task_list:
             if not stage_path.is_stage_supported(c_id):
                 raise ValueError(c_id)
@@ -703,7 +705,27 @@ class ArknightsHelper(object):
             building_count = building_count + 1
             logger.info('访问第 %s 位好友', building_count)
         logger.info('信赖领取完毕')
-    
+
+    def my_building(self):
+        # logger.debug("helper.my_building")
+        # logger.info("清空基建")
+        # self.back_to_main()
+        screenshot = self.adb.screenshot()
+        # logger.info('进入我的基建')
+        # self.tap_quadrilateral(imgreco.main.get_back_my_build(screenshot))
+        # self.__wait(MEDIUM_WAIT + 3)
+        # self.tap_quadrilateral(imgreco.main.get_my_build_task(screenshot))
+        # self.__wait(SMALL_WAIT)
+        # logger.info('收取制造产物')
+        # self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+        # self.__wait(SMALL_WAIT)
+        # self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+        # self.__wait(SMALL_WAIT)
+        # self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+        #self.__wait(SMALL_WAIT)
+        logger.info(imgreco.main.get_my_build_task_clear(screenshot))
+        self.tap_rect((650, 290, 874, 354))
+
     def get_building(self):
         logger.debug("helper.get_building")
         logger.info("清空基建")
