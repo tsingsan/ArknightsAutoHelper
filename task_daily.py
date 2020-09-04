@@ -11,9 +11,10 @@ if __name__ == '__main__':
 
     helper = _create_helper()
     with helper._shellng_with:
-        helper.main_handler(
-            clear_tasks=False,
-            task_list=tasks,
-            auto_close=False
-        )
-        helper.clear_daily_task()
+        # helper.main_handler(
+        #     clear_tasks=False,
+        #     task_list=tasks,
+        #     auto_close=False
+        # )
+        # helper.clear_daily_task()
+        helper.my_building()

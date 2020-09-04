@@ -706,6 +706,9 @@ class ArknightsHelper(object):
             logger.info('访问第 %s 位好友', building_count)
         logger.info('信赖领取完毕')
 
+    def reco_items(self):
+        pass
+
     def my_building(self):
         # logger.debug("helper.my_building")
         # logger.info("清空基建")
@@ -716,15 +719,19 @@ class ArknightsHelper(object):
         # self.__wait(MEDIUM_WAIT + 3)
         # self.tap_quadrilateral(imgreco.main.get_my_build_task(screenshot))
         # self.__wait(SMALL_WAIT)
-        # logger.info('收取制造产物')
-        # self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
-        # self.__wait(SMALL_WAIT)
-        # self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
-        # self.__wait(SMALL_WAIT)
-        # self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
-        #self.__wait(SMALL_WAIT)
-        logger.info(imgreco.main.get_my_build_task_clear(screenshot))
-        self.tap_rect((650, 290, 874, 354))
+       
+        # self.tap_rect((650, 290, 874, 354))
+        rect, confidence = imgreco.common.find_targets(screenshot, "building/notification.png")
+        if confidence > 0.9:
+            self.tap_rect(rect)
+            self.__wait(SMALL_WAIT)
+            logger.info('收取制造产物')
+            self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+            self.__wait(SMALL_WAIT)
+            self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+            self.__wait(SMALL_WAIT)
+            self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+            self.__wait(SMALL_WAIT)
 
     def get_building(self):
         logger.debug("helper.get_building")

@@ -59,6 +59,20 @@ def get_setting_back_rect(viewport):
     vw, vh = util.get_vwvh(viewport)
     return (4.722 * vh, 3.750 * vh, 19.444 * vh, 8.333 * vh)
 
+def find_targets(img, target):
+    # raise NotImplementedError
+    scale = 1
+    if img.height != 720:
+        scale = img.height / 720
+        img = imgops.scale_to_height(img, 720)
+    source = img.convert('L')
+    template = resources.load_image_cached(target, 'L')
+    mtresult = cv.matchTemplate(np.asarray(source), np.asarray(template), cv.TM_CCOEFF_NORMED)
+    print (mtresult.shape)
+    maxidx = np.unravel_index(np.argmax(mtresult), mtresult.shape)
+    y, x = maxidx
+    rect = np.array((x, y, x + template.width, y + template.height)) * scale
+    return tuple(rect.astype(np.int32)), mtresult[maxidx]
 
 def find_close_button(img):
     # raise NotImplementedError
