@@ -59,7 +59,7 @@ def get_setting_back_rect(viewport):
     vw, vh = util.get_vwvh(viewport)
     return (4.722 * vh, 3.750 * vh, 19.444 * vh, 8.333 * vh)
 
-def find_targets(img, target):
+def find_target(img, target):
     # raise NotImplementedError
     scale = 1
     if img.height != 720:
@@ -68,11 +68,38 @@ def find_targets(img, target):
     source = img.convert('L')
     template = resources.load_image_cached(target, 'L')
     mtresult = cv.matchTemplate(np.asarray(source), np.asarray(template), cv.TM_CCOEFF_NORMED)
-    print (mtresult.shape)
     maxidx = np.unravel_index(np.argmax(mtresult), mtresult.shape)
+    if mtresult[maxidx] < 0.9:
+        return None
     y, x = maxidx
     rect = np.array((x, y, x + template.width, y + template.height)) * scale
-    return tuple(rect.astype(np.int32)), mtresult[maxidx]
+    return tuple(rect.astype(np.int32))
+
+def find_targets(img, target, num = 5):
+    # raise NotImplementedError
+    scale = 1
+    if img.height != 720:
+        scale = img.height / 720
+        img = imgops.scale_to_height(img, 720)
+    source = img.convert('L')
+    template = resources.load_image_cached(target, 'L')
+    mtresult = cv.matchTemplate(np.asarray(source), np.asarray(template), cv.TM_CCOEFF_NORMED)
+    liresult = np.reshape(mtresult, mtresult.shape[0] * mtresult.shape[1])
+    sort = np.argsort(liresult)[-num:][::-1]
+
+    targets = []
+    for i in range(num):
+        maxidx = np.unravel_index(sort[i], mtresult.shape)
+        if mtresult[maxidx] < 0.9:
+            break
+
+        y, x = maxidx
+        rect = np.array((x, y, x + template.width, y + template.height)) * scale
+        targets.append(tuple(rect.astype(np.int32)))
+
+    targets.sort(key = lambda t: t[0] + t[1] * 10)
+   
+    return targets
 
 def find_close_button(img):
     # raise NotImplementedError
