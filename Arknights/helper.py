@@ -723,65 +723,84 @@ class ArknightsHelper(object):
             self.__wait(SMALL_WAIT)
 
     def my_building(self):
-        logger.debug("helper.my_building")
-        logger.info("清空基建")
-        self.back_to_main()
-        screenshot = self.adb.screenshot()
-        logger.info('进入我的基建')
-        self.tap_quadrilateral(imgreco.main.get_back_my_build(screenshot))
-        self.__wait(MEDIUM_WAIT + 3)
-        self.tap_quadrilateral(imgreco.main.get_my_build_task(screenshot))
-        self.__wait(SMALL_WAIT)
+        # logger.debug("helper.my_building")
+        # logger.info("清空基建")
+        # self.back_to_main()
+        # logger.info('进入我的基建')
+        # self.tap_quadrilateral(imgreco.main.get_back_my_build(screenshot))
+        # self.__wait(MEDIUM_WAIT + 3)
+        # self.tap_quadrilateral(imgreco.main.get_my_build_task(screenshot))
+        # self.__wait(SMALL_WAIT)
        
-        self.tap_rect((650, 290, 874, 354))
-        noti_rect, confidence = imgreco.common.find_target(screenshot, "building/notification.png")
-        if confidence > 0.9:
-            self.tap_rect(noti_rect)
-            self.__wait(SMALL_WAIT)
-            logger.info('收取制造产物')
-            self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
-            self.__wait(SMALL_WAIT)
-            self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
-            self.__wait(SMALL_WAIT)
-            self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
-            self.__wait(SMALL_WAIT)
-            self.tap_rect(noti_rect)
-            self.__wait(SMALL_WAIT)
-        logger.info('进入第一个宿舍')
-        self.tap_rect((700, 300, 850, 320))
-        self.__wait(SMALL_WAIT)
+        # self.tap_rect((650, 290, 874, 354))
+        # screenshot = self.adb.screenshot()
+        # noti_rect = imgreco.common.find_target(screenshot, "building/notification.png")
+        # if noti_rect:
+        #     self.tap_rect(noti_rect)
+        #     self.__wait(SMALL_WAIT)
+        #     logger.info('收取制造产物')
+        #     self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+        #     self.__wait(SMALL_WAIT)
+        #     self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+        #     self.__wait(SMALL_WAIT)
+        #     self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+        #     self.__wait(SMALL_WAIT)
+        #     self.tap_rect(noti_rect)
+        #     self.__wait(SMALL_WAIT)
+
+        # apartment_finished = False
+        # logger.info('进入第一个宿舍')
+        # self.tap_rect((700, 300, 850, 320))
+        # self.__wait(SMALL_WAIT)
+
+        # screenshot = self.adb.screenshot()
+        # tar = imgreco.common.find_target(screenshot, "building/people.png")
+        # if tar:
+        #     self.tap_rect(tar)
+        #     self.__wait(SMALL_WAIT)
         
-        self.screenshot_and_click("building/clear.png")
-        self.screenshot_and_click("building/add.png")
-        screenshot = self.adb.screenshot()
-        charas = imgreco.common.find_targets(screenshot, "building/distracted.png")
-        for chara in charas:
-            self.tap_rect(chara)
+        # self.screenshot_and_click("building/clear.png")
+        # self.screenshot_and_click("building/add.png")
+        # self.__wait(SMALL_WAIT)
+        # screenshot = self.adb.screenshot()
+        # charas = imgreco.common.find_targets(screenshot, "building/distracted.png")
+        # apartment_finished = len(charas) <= 5
+        # for chara in charas:
+        #     self.tap_rect(chara)
 
-        self.screenshot_and_click("building/confirm.png")
+        # self.screenshot_and_click("building/confirm.png")
+        # self.__wait(SMALL_WAIT)
+        # self.nav_back()
 
-        i = 1
-        while i < 4:
-            screenshot = self.adb.screenshot()
-            targets = imgreco.common.find_targets(screenshot, "building/apartment.png")
-            if len(targets) <= i:
-                break
+        # i = 1
+        # while not apartment_finished and i < 4:
+        #     screenshot = self.adb.screenshot()
+        #     targets = imgreco.common.find_targets(screenshot, "building/apartment.png")
+        #     if len(targets) <= i:
+        #         break
 
-            self.tap_rect(targets[i])
-            self.screenshot_and_click("building/clear.png")
-            self.screenshot_and_click("building/apartment_add.png")
-            screenshot = self.adb.screenshot()
-            charas = imgreco.common.find_targets(screenshot, "building/distracted.png")
-            for chara in charas:
-                self.tap_rect(chara)
-            self.screenshot_and_click("building/confirm.png")
-            self.__wait(SMALL_WAIT)
+        #     self.tap_rect(targets[i])
+        #     self.__wait(SMALL_WAIT)
 
-            self.nav_back()
+        #     screenshot = self.adb.screenshot()
+        #     tar = imgreco.common.find_target(screenshot, "building/people.png")
+        #     if tar:
+        #         self.tap_rect(tar)
+        #         self.__wait(SMALL_WAIT)
 
-            i += 1
+        #     self.screenshot_and_click("building/clear.png")
+        #     self.screenshot_and_click("building/add.png")
+        #     screenshot = self.adb.screenshot()
+        #     charas = imgreco.common.find_targets(screenshot, "building/distracted.png")
+        #     apartment_finished = len(charas) <= 5
+        #     for chara in charas:
+        #         self.tap_rect(chara)
+        #     self.screenshot_and_click("building/confirm.png")
+        #     self.__wait(SMALL_WAIT)
 
-        return
+        #     self.nav_back()
+
+        #     i += 1
 
         i = 0
         while i < 4:
@@ -803,8 +822,7 @@ class ArknightsHelper(object):
             if tar:
                 self.tap_rect(tar)
             elif imgreco.common.find_target(screenshot, "building/people_inverse.png") is None:
-                self.tap_rect(targets[i])
-                self.__wait(SMALL_WAIT)
+                continue
 
             self.screenshot_and_click()
             self.__wait(SMALL_WAIT)

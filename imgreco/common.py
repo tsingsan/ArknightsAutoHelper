@@ -75,7 +75,7 @@ def find_target(img, target):
     rect = np.array((x, y, x + template.width, y + template.height)) * scale
     return tuple(rect.astype(np.int32))
 
-def find_targets(img, target, num = 5):
+def find_targets(img, target, num = 20):
     # raise NotImplementedError
     scale = 1
     if img.height != 720:
