@@ -587,6 +587,24 @@ class ArknightsHelper(object):
                 else:
                     break
             screenshot = self.adb.screenshot()
+
+        logger.info('切换到每周任务')
+        self.screenshot_and_click("task/weekly.png")
+        screenshot = self.adb.screenshot()
+        while imgreco.task.check_collectable_reward(screenshot):
+            logger.info('完成任务')
+            self.tap_rect(imgreco.task.get_collect_reward_button_rect(self.viewport))
+            self.__wait(SMALL_WAIT)
+            while True:
+                screenshot = self.adb.screenshot()
+                if imgreco.common.check_get_item_popup(screenshot):
+                    logger.info('领取奖励')
+                    self.tap_rect(imgreco.common.get_reward_popup_dismiss_rect(self.viewport))
+                    self.__wait(SMALL_WAIT)
+                else:
+                    break
+            screenshot = self.adb.screenshot()
+
         logger.info("奖励已领取完毕")
 
 
@@ -715,92 +733,78 @@ class ArknightsHelper(object):
         if tar:
             self.tap_rect(tar)
 
-    def nav_back(self):
+    def nav_back(self, wait_time = SMALL_WAIT):
         screenshot = self.adb.screenshot()
         if imgreco.common.check_nav_button(screenshot):
             logger.info('发现返回按钮，点击返回')
             self.tap_rect(imgreco.common.get_nav_button_back_rect(self.viewport))
-            self.__wait(SMALL_WAIT)
+            self.__wait(wait_time)
 
     def my_building(self):
-        # logger.debug("helper.my_building")
-        # logger.info("清空基建")
-        # self.back_to_main()
-        # logger.info('进入我的基建')
-        # self.tap_quadrilateral(imgreco.main.get_back_my_build(screenshot))
-        # self.__wait(MEDIUM_WAIT + 3)
-        # self.tap_quadrilateral(imgreco.main.get_my_build_task(screenshot))
-        # self.__wait(SMALL_WAIT)
-       
-        # self.tap_rect((650, 290, 874, 354))
-        # screenshot = self.adb.screenshot()
-        # noti_rect = imgreco.common.find_target(screenshot, "building/notification.png")
-        # if noti_rect:
-        #     self.tap_rect(noti_rect)
-        #     self.__wait(SMALL_WAIT)
-        #     logger.info('收取制造产物')
-        #     self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
-        #     self.__wait(SMALL_WAIT)
-        #     self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
-        #     self.__wait(SMALL_WAIT)
-        #     self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
-        #     self.__wait(SMALL_WAIT)
-        #     self.tap_rect(noti_rect)
-        #     self.__wait(SMALL_WAIT)
+        self.back_to_main()
+        logger.info('进入我的基建')
+        screenshot = self.adb.screenshot()
+        self.tap_quadrilateral(imgreco.main.get_back_my_build(screenshot))
+        self.__wait(MEDIUM_WAIT + 3)
 
-        # apartment_finished = False
-        # logger.info('进入第一个宿舍')
-        # self.tap_rect((700, 300, 850, 320))
-        # self.__wait(SMALL_WAIT)
+        screenshot = self.adb.screenshot()
+        noti_rect = imgreco.common.find_target(screenshot, "building/notification.png")
+        if noti_rect:
+            self.tap_rect(noti_rect)
+            self.__wait(SMALL_WAIT)
+            logger.info('收取制造产物')
+            self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+            self.__wait(SMALL_WAIT)
+            self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+            self.__wait(SMALL_WAIT)
+            self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+            self.__wait(SMALL_WAIT)
+            self.tap_rect(noti_rect)
+            self.__wait(SMALL_WAIT)
 
-        # screenshot = self.adb.screenshot()
-        # tar = imgreco.common.find_target(screenshot, "building/people.png")
-        # if tar:
-        #     self.tap_rect(tar)
-        #     self.__wait(SMALL_WAIT)
-        
-        # self.screenshot_and_click("building/clear.png")
-        # self.screenshot_and_click("building/add.png")
-        # self.__wait(SMALL_WAIT)
-        # screenshot = self.adb.screenshot()
-        # charas = imgreco.common.find_targets(screenshot, "building/distracted.png")
-        # apartment_finished = len(charas) <= 5
-        # for chara in charas:
-        #     self.tap_rect(chara)
+        i = 0
+        apartment_finished = False
+        while not apartment_finished and i < 4:
+            logger.info('进入第%d个宿舍' % (i+1))
+            if i == 0:
+                self.tap_rect((700, 300, 850, 320))
+                self.__wait(SMALL_WAIT)
+            else:
+                screenshot = self.adb.screenshot()
+                targets = imgreco.common.find_targets(screenshot, "building/apartment.png")
+                if len(targets) <= i:
+                    break
 
-        # self.screenshot_and_click("building/confirm.png")
-        # self.__wait(SMALL_WAIT)
-        # self.nav_back()
+                self.tap_rect(targets[i])
+                self.__wait(SMALL_WAIT)
 
-        # i = 1
-        # while not apartment_finished and i < 4:
-        #     screenshot = self.adb.screenshot()
-        #     targets = imgreco.common.find_targets(screenshot, "building/apartment.png")
-        #     if len(targets) <= i:
-        #         break
+            screenshot = self.adb.screenshot()
+            tar = imgreco.common.find_target(screenshot, "building/people.png")
+            if tar:
+                self.tap_rect(tar)
+                self.__wait(SMALL_WAIT)
+                screenshot = self.adb.screenshot()
 
-        #     self.tap_rect(targets[i])
-        #     self.__wait(SMALL_WAIT)
+            tar = imgreco.common.find_target(screenshot, "building/inrest.png")
+            if tar is None:
+                self.screenshot_and_click("building/clear.png")
 
-        #     screenshot = self.adb.screenshot()
-        #     tar = imgreco.common.find_target(screenshot, "building/people.png")
-        #     if tar:
-        #         self.tap_rect(tar)
-        #         self.__wait(SMALL_WAIT)
+            tar = imgreco.common.find_target(screenshot, "building/add.png")
+            if tar:
+                self.tap_rect(tar)
+                self.__wait(TINY_WAIT)
 
-        #     self.screenshot_and_click("building/clear.png")
-        #     self.screenshot_and_click("building/add.png")
-        #     screenshot = self.adb.screenshot()
-        #     charas = imgreco.common.find_targets(screenshot, "building/distracted.png")
-        #     apartment_finished = len(charas) <= 5
-        #     for chara in charas:
-        #         self.tap_rect(chara)
-        #     self.screenshot_and_click("building/confirm.png")
-        #     self.__wait(SMALL_WAIT)
+                screenshot = self.adb.screenshot()
+                charas = imgreco.common.find_targets(screenshot, "building/distracted.png")
+                apartment_finished = len(charas) <= 5
+                for chara in charas:
+                    self.tap_rect(chara)
+                self.screenshot_and_click("building/confirm.png")
+                self.__wait(SMALL_WAIT)
 
-        #     self.nav_back()
+            self.nav_back()
 
-        #     i += 1
+            i += 1
 
         i = 0
         while i < 4:
@@ -815,7 +819,7 @@ class ArknightsHelper(object):
                 break
 
             self.tap_rect(targets[i])
-            self.__wait(SMALL_WAIT)
+            self.__wait(TINY_WAIT)
 
             screenshot = self.adb.screenshot()
             tar = imgreco.common.find_target(screenshot, "building/people.png")
@@ -824,12 +828,100 @@ class ArknightsHelper(object):
             elif imgreco.common.find_target(screenshot, "building/people_inverse.png") is None:
                 continue
 
-            self.screenshot_and_click()
-            self.__wait(SMALL_WAIT)
-            self.screenshot_and_click("building/add.png")
-            self.screenshot_and_click("building/confirm.png")
+            factory_item = None
+            screenshot = self.adb.screenshot()
+            if imgreco.common.find_target(screenshot, "building/item_gold.png"):
+                factory_item = "gold"
+            elif imgreco.common.find_target(screenshot, "building/item_record.png"):
+                factory_item = "record"
+            elif imgreco.common.find_target(screenshot, "building/item_gem.png"):
+                factory_item = "gem"
 
-            self.nav_back()
+            slots = imgreco.common.find_targets(screenshot, "building/add.png")
+            logger.info('进入制造站 ' + factory_item)
+
+            if factory_item and len(slots) > 1:
+                self.tap_rect(slots[0])
+                self.__wait(TINY_WAIT)
+
+                screenshot = self.adb.screenshot()
+
+                targets = []
+                if factory_item == "gold":
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_gold.png"))
+                elif factory_item == "record":
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_record.png"))
+                elif factory_item == "gem":
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_gem.png"))
+
+                if len(targets) < 2:
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_common.png"))
+                if len(targets) < 2:
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_common2.png"))
+                if len(targets) < 2:
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_common3.png"))
+
+                if len(targets) < 2:
+                    wendy = imgreco.common.find_target(screenshot, "building/buff_wendy.png")
+                    if wendy:
+                        targets = [wendy]
+
+                for target in targets[:2]:
+                    self.tap_rect(target)
+                self.screenshot_and_click("building/confirm.png")
+
+            self.nav_back(TINY_WAIT)
+
+            i += 1
+
+        i = 0
+        while i < 2:
+            originX = self.viewport[0] // 2 + randint(-100, 100)
+            originY = self.viewport[1] // 2 + randint(-100, 100)
+            self.adb.touch_swipe2((originX, originY), (100.0 * uniform(0.8, 1.2), 0), 255)
+            self.__wait(1)
+
+            screenshot = self.adb.screenshot()
+            targets = imgreco.common.find_targets(screenshot, "building/trader.png")
+            if len(targets) <= i:
+                break
+
+            self.tap_rect(targets[i])
+            self.__wait(TINY_WAIT)
+
+            screenshot = self.adb.screenshot()
+            tar = imgreco.common.find_target(screenshot, "building/people.png")
+            if tar:
+                self.tap_rect(tar)
+            elif imgreco.common.find_target(screenshot, "building/people_inverse.png") is None:
+                continue
+
+            logger.info('进入贸易站')
+
+            screenshot = self.adb.screenshot()
+            slots = imgreco.common.find_targets(screenshot, "building/add.png")
+            if len(slots) > 0:
+                self.tap_rect(slots[0])
+                self.__wait(TINY_WAIT)
+
+                screenshot = self.adb.screenshot()
+
+                targets = []
+                targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader1.png"))
+                if len(targets) < 3:
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader2.png"))
+                if len(targets) < 3:
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader3.png"))
+                if len(targets) < 3:
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader4.png"))
+                if len(targets) < 3:
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader5.png"))
+
+                for target in targets[:3]:
+                    self.tap_rect(target)
+                self.screenshot_and_click("building/confirm.png")
+
+            self.nav_back(TINY_WAIT)
 
             i += 1
 

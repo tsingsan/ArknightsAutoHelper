@@ -75,7 +75,7 @@ def find_target(img, target):
     rect = np.array((x, y, x + template.width, y + template.height)) * scale
     return tuple(rect.astype(np.int32))
 
-def find_targets(img, target, num = 20):
+def find_targets(img, target, num = 16):
     # raise NotImplementedError
     scale = 1
     if img.height != 720:
@@ -90,10 +90,18 @@ def find_targets(img, target, num = 20):
     targets = []
     for i in range(num):
         maxidx = np.unravel_index(sort[i], mtresult.shape)
-        if mtresult[maxidx] < 0.9:
+        if mtresult[maxidx] < 0.85:
             break
 
         y, x = maxidx
+        skipClose = False
+        for tar in targets:
+            if abs(tar[0] - x) < 10 and abs(tar[1] - y) < 10:
+                skipClose = True
+                break
+        if skipClose:
+            continue
+
         rect = np.array((x, y, x + template.width, y + template.height)) * scale
         targets.append(tuple(rect.astype(np.int32)))
 
