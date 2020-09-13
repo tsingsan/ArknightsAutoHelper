@@ -69,6 +69,7 @@ def find_target(img, target):
     template = resources.load_image_cached(target, 'L')
     mtresult = cv.matchTemplate(np.asarray(source), np.asarray(template), cv.TM_CCOEFF_NORMED)
     maxidx = np.unravel_index(np.argmax(mtresult), mtresult.shape)
+    print ("%.2f: %s" % (mtresult[maxidx], target))
     if mtresult[maxidx] < 0.9:
         return None
     y, x = maxidx

@@ -197,7 +197,6 @@ class ADBConnector:
             )
         )
 
-
     def _detect_loopbacks(self):
         if not (self.adb_serial.startswith('emulator-') or self.adb_serial.startswith('127.0.0.1:')):
             return []
@@ -295,4 +294,9 @@ class ADBConnector:
         logger.debug("点击坐标:({},{})".format(final_X, final_Y))
         command = "input tap {} {}".format(final_X,
                                            final_Y)
+        self.run_device_cmd(command)
+
+    def input_text(self, text):
+        logger.debug("输入文字:" + text)
+        command = " input text {}".format(text)
         self.run_device_cmd(command)

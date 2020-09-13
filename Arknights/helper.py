@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import logging
 from typing import Callable
@@ -724,14 +725,52 @@ class ArknightsHelper(object):
             logger.info('访问第 %s 位好友', building_count)
         logger.info('信赖领取完毕')
 
-    def reco_items(self):
-        pass
-
     def screenshot_and_click(self, img_path):
         screenshot = self.adb.screenshot()
         tar = imgreco.common.find_target(screenshot, img_path)
         if tar:
             self.tap_rect(tar)
+
+    def wait_and_click(self, img_path, max_wait_time = 20, exit_if_failure = True):
+        wait_time = 0
+        while wait_time < max_wait_time:
+            logger.info('点击 ' + img_path)
+            screenshot = self.adb.screenshot()
+            tar = imgreco.common.find_target(screenshot, img_path)
+            if tar:
+                self.tap_rect(tar)
+                self.__wait(TINY_WAIT)
+                break
+            else:
+                self.__wait(MEDIUM_WAIT)
+                wait_time += 1
+
+        if exit_if_failure and wait_time >= max_wait_time:
+            logger.info('结束任务, 超时 ' + img_path)
+            sys.exit(-1)
+
+    # def test(self):
+    #     screenshot = self.adb.screenshot()
+    #     tar = imgreco.common.find_target(screenshot, "building/add.png")
+
+    def login(self, username, userpass):
+        self.__wait(10, MANLIKE_FLAG=True)
+        self.wait_and_click("login/start.png")
+        self.__wait(MEDIUM_WAIT)
+        self.wait_and_click("login/account.png", max_wait_time = 3, exit_if_failure = False)
+        self.__wait(TINY_WAIT)
+        self.wait_and_click("login/login.png")
+        self.tap_rect((525, 415, 750, 445))
+        self.adb.input_text(username)
+        self.__wait(SMALL_WAIT, MANLIKE_FLAG=True)
+        self.tap_rect((525, 415, 750, 445))
+        self.__wait(TINY_WAIT)
+        self.tap_rect((525, 468, 750, 498))
+        self.adb.input_text(userpass)
+        self.__wait(SMALL_WAIT, MANLIKE_FLAG=True)
+        self.tap_rect((525, 468, 750, 498))
+        self.wait_and_click("login/confirmLogin.png")
+        self.__wait(12, MANLIKE_FLAG=True)
 
     def nav_back(self, wait_time = SMALL_WAIT):
         screenshot = self.adb.screenshot()
@@ -788,6 +827,8 @@ class ArknightsHelper(object):
             tar = imgreco.common.find_target(screenshot, "building/inrest.png")
             if tar is None:
                 self.screenshot_and_click("building/clear.png")
+                self.__wait(TINY_WAIT)
+                screenshot = self.adb.screenshot()
 
             tar = imgreco.common.find_target(screenshot, "building/add.png")
             if tar:
@@ -825,6 +866,7 @@ class ArknightsHelper(object):
             tar = imgreco.common.find_target(screenshot, "building/people.png")
             if tar:
                 self.tap_rect(tar)
+                self.__wait(TINY_WAIT)
             elif imgreco.common.find_target(screenshot, "building/people_inverse.png") is None:
                 continue
 
@@ -869,6 +911,20 @@ class ArknightsHelper(object):
                 for target in targets[:2]:
                     self.tap_rect(target)
                 self.screenshot_and_click("building/confirm.png")
+
+            #fulfill
+            if factory_item == "gem":
+                screenshot = self.adb.screenshot()
+                tar = imgreco.common.find_target(screenshot, "building/item_gem.png")
+                if tar:
+                    self.tap_rect(tar)
+                    self.__wait(TINY_WAIT)
+                    self.tap_rect(tar)
+                    self.__wait(SMALL_WAIT)
+                    self.screenshot_and_click("building/most.png")
+                    self.__wait(TINY_WAIT)
+                    self.screenshot_and_click("building/confirmIcon.png")
+                    self.__wait(TINY_WAIT)
 
             self.nav_back(TINY_WAIT)
 
