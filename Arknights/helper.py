@@ -747,17 +747,16 @@ class ArknightsHelper(object):
 
         if exit_if_failure and wait_time >= max_wait_time:
             logger.info('结束任务, 超时 ' + img_path)
-            sys.exit(-1)
+            sys.exit(2)
 
     # def test(self):
     #     screenshot = self.adb.screenshot()
     #     tar = imgreco.common.find_target(screenshot, "building/add.png")
 
     def login(self, username, userpass):
-        self.__wait(10, MANLIKE_FLAG=True)
         self.wait_and_click("login/start.png")
         self.__wait(MEDIUM_WAIT)
-        self.wait_and_click("login/account.png", max_wait_time = 3, exit_if_failure = False)
+        self.wait_and_click("login/account.png", max_wait_time = 10, exit_if_failure = False)
         self.__wait(TINY_WAIT)
         self.wait_and_click("login/login.png")
         self.tap_rect((525, 415, 750, 445))
@@ -770,7 +769,7 @@ class ArknightsHelper(object):
         self.__wait(SMALL_WAIT, MANLIKE_FLAG=True)
         self.tap_rect((525, 468, 750, 498))
         self.wait_and_click("login/confirmLogin.png")
-        self.__wait(12, MANLIKE_FLAG=True)
+        self.__wait(15, MANLIKE_FLAG=True)
 
     def nav_back(self, wait_time = SMALL_WAIT):
         screenshot = self.adb.screenshot()
@@ -924,7 +923,16 @@ class ArknightsHelper(object):
                     self.screenshot_and_click("building/most.png")
                     self.__wait(TINY_WAIT)
                     self.screenshot_and_click("building/confirmIcon.png")
+                    self.__wait(SMALL_WAIT)
+                    self.screenshot_and_click("building/accelerate.png")
                     self.__wait(TINY_WAIT)
+                    self.screenshot_and_click("building/most_accelerate.png")
+                    self.__wait(TINY_WAIT)
+                    self.screenshot_and_click("building/confirm_accelerate.png")
+                    self.__wait(SMALL_WAIT)
+                    self.screenshot_and_click("building/achieve.png")
+                    self.__wait(TINY_WAIT)
+
 
             self.nav_back(TINY_WAIT)
 
