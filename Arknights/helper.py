@@ -932,7 +932,7 @@ class ArknightsHelper(object):
                     self.__wait(SMALL_WAIT)
                     self.screenshot_and_click("building/achieve.png")
                     self.__wait(TINY_WAIT)
-
+                    self.nav_back(TINY_WAIT)
 
             self.nav_back(TINY_WAIT)
 
