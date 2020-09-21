@@ -65,6 +65,7 @@ class ArknightsHelper(object):
         if DEBUG_LEVEL >= 1:
             self.__print_info()
         self.refill_with_item = config.get('behavior/refill_ap_with_item', False)
+        self.refill_with_item_close_time_only = True
         self.refill_with_originium = config.get('behavior/refill_ap_with_originium', False)
         self.use_refill = self.refill_with_item or self.refill_with_originium
         self.loots = {}
@@ -302,8 +303,9 @@ class ArknightsHelper(object):
                     refill_type = imgreco.before_operation.check_ap_refill_type(screenshot)
                     confirm_refill = False
                     if refill_type == 'item' and self.refill_with_item:
-                        logger.info('使用道具回复理智')
-                        confirm_refill = True
+                        if self.refill_with_item_close_time_only and imgreco.common.find_target(screenshot, "before_operation/time_close.png"):
+                            logger.info('使用道具回复理智')
+                            confirm_refill = True
                     if refill_type == 'originium' and self.refill_with_originium:
                         logger.info('碎石回复理智')
                         confirm_refill = True
@@ -313,6 +315,9 @@ class ArknightsHelper(object):
                         self.refill_count += 1
                         self.__wait(MEDIUM_WAIT)
                         return  # to on_prepare state
+                    else:
+                        self.screenshot_and_click("before_operation/cancel_refill.png")
+                        self.__wait(MEDIUM_WAIT)
                     logger.error('未能回复理智')
                 raise StopIteration()
 

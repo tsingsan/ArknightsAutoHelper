@@ -10,6 +10,8 @@ tasks = [("1-7", 99)]
 if __name__ == '__main__':
 
     helper = _create_helper()
+    helper.use_refill = True
+    helper.refill_with_item = True
     with helper._shellng_with:
         helper.main_handler(
             clear_tasks=False,
