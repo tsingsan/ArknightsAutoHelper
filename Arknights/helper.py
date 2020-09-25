@@ -842,7 +842,7 @@ class ArknightsHelper(object):
                 screenshot = self.adb.screenshot()
                 charas = imgreco.common.find_targets(screenshot, "building/distracted.png")
                 apartment_finished = len(charas) <= 5
-                for chara in charas:
+                for chara in charas[:5]:
                     self.tap_rect(chara)
                 self.screenshot_and_click("building/confirm.png")
                 self.__wait(SMALL_WAIT)
@@ -906,6 +906,8 @@ class ArknightsHelper(object):
                     targets.extend(imgreco.common.find_targets(screenshot, "building/buff_common2.png"))
                 if len(targets) < 2:
                     targets.extend(imgreco.common.find_targets(screenshot, "building/buff_common3.png"))
+                if len(targets) < 2:
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_common4.png"))
 
                 if len(targets) < 2:
                     wendy = imgreco.common.find_target(screenshot, "building/buff_wendy.png")
@@ -969,7 +971,7 @@ class ArknightsHelper(object):
 
             screenshot = self.adb.screenshot()
             slots = imgreco.common.find_targets(screenshot, "building/add.png")
-            if len(slots) > 0:
+            if len(slots) > 2:
                 self.tap_rect(slots[0])
                 self.__wait(TINY_WAIT)
 
