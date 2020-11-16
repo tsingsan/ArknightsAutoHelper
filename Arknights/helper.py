@@ -303,7 +303,7 @@ class ArknightsHelper(object):
                     refill_type = imgreco.before_operation.check_ap_refill_type(screenshot)
                     confirm_refill = False
                     if refill_type == 'item' and self.refill_with_item:
-                        if self.refill_with_item_close_time_only and imgreco.common.find_target(screenshot, "before_operation/time_close.png"):
+                        if not self.refill_with_item_close_time_only or imgreco.common.find_target(screenshot, "before_operation/time_close.png"):
                             logger.info('使用道具回复理智')
                             confirm_refill = True
                     if refill_type == 'originium' and self.refill_with_originium:
