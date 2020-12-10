@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import requests
 import logging
 from typing import Callable
 from dataclasses import dataclass
@@ -19,8 +20,10 @@ from . import stage_path
 from Arknights.click_location import *
 from Arknights.flags import *
 from util.exc_guard import guard
+from util.richlog import get_logger
 
 logger = logging.getLogger('helper')
+recruit_logger = get_logger('recruit_result')
 coloredlogs.install(
     fmt=' Ξ %(message)s',
     #fmt=' %(asctime)s ! %(funcName)s @ %(filename)s:%(lineno)d ! %(levelname)s # %(message)s',
@@ -36,6 +39,15 @@ def item_name_guard(item):
 def item_qty_guard(qty):
     return str(qty) if qty is not None else '?'
 
+def send_message(msg):
+    requests.post(
+            "https://api.alertover.com/v1/alert",
+            data={
+                "source": "s-e91f93fc-40d7-4f1c-bdae-7de229d7",
+                "receiver": "g-4bb5ab90-25a9-4ab3-936f-91a6363f",
+                "content": msg
+            }
+        )
 
 def format_recoresult(recoresult):
     result = None
@@ -623,6 +635,122 @@ class ArknightsHelper(object):
         logger.debug('计算结果：%s', repr(result))
         return result
 
+    def recruit_add(self):
+        from . import recruit_calc
+
+        screenshot = self.adb.screenshot()
+        tar = imgreco.common.find_target(screenshot, "recruit/start.png", 0.7)
+        if tar:
+            self.tap_rect(tar)
+        else:
+            return False
+
+        tryAgain = False
+        tags, tags_pos = imgreco.recruit.get_recruit_tags(self.adb.screenshot())
+        logger.info('可选标签：%s', ' '.join(tags))
+        try:
+            result = recruit_calc.calculate(tags)
+        except Exception as e:
+            tryAgain = True
+
+        if tryAgain:
+            self.__wait(SMALL_WAIT)
+            tags, tags_pos = imgreco.recruit.get_recruit_tags(self.adb.screenshot())
+            logger.info('可选标签：%s', ' '.join(tags))
+            result = recruit_calc.calculate(tags)
+
+        if any('机械' in tag or '资深' in tag for tag in tags):
+            logger.info('计算结果：%s', repr(result))
+            send_message(' '.join(tags))
+            return False
+
+        candidate = result[0]
+        if result[0][2] == 0:
+            filtered_result = list(filter(lambda x: len(x[0]) == 1 and x[2] >= 0, result))
+            candidate = filtered_result[randint(0, len(filtered_result)-1)]
+
+        logger.info(candidate)
+
+        for i, tag in enumerate(tags):
+            if tag in candidate[0]:
+                self.tap_rect(tags_pos[i])
+
+        screenshot = self.adb.screenshot()
+        tar = imgreco.common.find_target(screenshot, "recruit/time_add.png")
+        if tar:
+            click_num = 9
+            while click_num > 0:
+                self.tap_rect((tar[0] + (tar[2] - tar[0])/2, tar[1], tar[2], tar[3]))
+                click_num -= 1
+        else:
+            send_message("招募时间增加出错")
+            return False
+
+        screenshot = self.adb.screenshot()
+        tar = imgreco.common.find_target(screenshot, "recruit/time_confirm.png")
+        if tar is None:
+            send_message("招募时间确认出错")
+            return False
+
+        self.screenshot_and_click("recruit/ok.png")
+        self.__wait(SMALL_WAIT)
+
+        return True
+
+    def recruit_get(self):
+
+        if not self.screenshot_and_click("recruit/recruit_confirm.png"):
+            return False
+
+        self.__wait(SMALL_WAIT)
+        self.screenshot_and_click("recruit/skip.png")
+
+        self.__wait(TINY_WAIT)
+        screenshot = self.adb.screenshot()
+        recruit_logger.logimage(imgreco.imgops.scale_to_height(screenshot, 240))
+        self.tap_rect((525, 415, 750, 445))
+        self.__wait(TINY_WAIT)
+
+        return True
+
+    def recruit_daily(self):
+        self.back_to_main()
+        screenshot = self.adb.screenshot()
+        logger.info('进入公开招募界面')
+        self.tap_quadrilateral(imgreco.main.get_public_recruit(screenshot))
+        self.__wait(SMALL_WAIT)
+
+        while self.recruit_get():
+            pass
+
+        recruit_num = 3
+        while recruit_num > 0:
+            if not self.recruit_add():
+                return
+
+            recruit_num -= 1
+
+    def recruit_batched(self, recruit_num = 100):
+        while recruit_num > 0:
+
+            if not self.recruit_add():
+                return
+
+            self.screenshot_and_click("recruit/recruit_now.png")
+            self.__wait(TINY_WAIT)
+            screenshot = self.adb.screenshot()
+            tar = imgreco.common.find_target(screenshot, "recruit/red_ok.png")
+            if tar:
+                self.tap_rect(tar)
+                self.__wait(TINY_WAIT)
+            else:
+                return
+
+            if not self.recruit_get():
+                return
+
+            recruit_num -= 1
+
 
     def find_and_tap(self, partition, target):
         lastpos = None
@@ -735,6 +863,9 @@ class ArknightsHelper(object):
         tar = imgreco.common.find_target(screenshot, img_path)
         if tar:
             self.tap_rect(tar)
+            return True
+        else:
+            return False
 
     def wait_and_click(self, img_path, max_wait_time = 20, exit_if_failure = True):
         wait_time = 0

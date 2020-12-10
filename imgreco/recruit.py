@@ -21,6 +21,11 @@ def remove_unknown_chars(s, known_chars):
 
 def get_recruit_tags(img):
     vw, vh = util.get_vwvh(img)
+    pos_array = [(50*vw-36.481*vh, 50.185*vh, 50*vw-17.315*vh, 56.111*vh), 
+                (50*vw-13.241*vh, 50.185*vh, 50*vw+6.111*vh, 56.111*vh),
+                (50*vw+10.000*vh, 50.185*vh, 50*vw+29.259*vh, 56.111*vh),
+                (50*vw-36.481*vh, 60.278*vh, 50*vw-17.315*vh, 66.019*vh),
+                (50*vw-13.241*vh, 60.278*vh, 50*vw+6.111*vh, 66.019*vh)]
     tagimgs = [
         img.crop((50*vw-36.481*vh, 50.185*vh, 50*vw-17.315*vh, 56.111*vh)).convert('L'),
         img.crop((50*vw-13.241*vh, 50.185*vh, 50*vw+6.111*vh, 56.111*vh)).convert('L'),
@@ -37,4 +42,4 @@ def get_recruit_tags(img):
         logger.logimage(tagimg)
         logger.logtext(tagtext)
 
-    return tags
+    return tags, pos_array

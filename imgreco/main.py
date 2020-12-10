@@ -121,6 +121,19 @@ def get_back_my_build(img):
         # FIXME: implement with feature matching?
         raise NotImplementedError('unsupported aspect ratio')
 
+def get_public_recruit(img):
+    """
+    :returns: [0][1]
+              [3][2]
+    """
+    aspect = Fraction(*img.size)
+    vw, vh = util.get_vwvh(img)
+    if aspect == Fraction(16, 9):
+        return (np.array((73.672*vw, 66.667*vh)), np.array((84.375*vw, 66.667*vh)), np.array((84.375*vw, 75.000*vh)), np.array((73.672*vw, 75.000*vh)))
+    else:
+        # FIXME: implement with feature matching?
+        raise NotImplementedError('unsupported aspect ratio')
+
 # 点击基建主界面右上角的提示（以凸显一键收取）
 def get_my_build_task(img):
     """
