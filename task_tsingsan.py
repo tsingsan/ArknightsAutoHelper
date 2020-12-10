@@ -12,15 +12,21 @@ if __name__ == '__main__':
 
     weekDay = time.ctime()[:3]
     curHour = int(time.ctime()[-13:-11])
-    do_ce_5 = curHour < 20 and (weekDay == "Tue" or weekDay == "Thu" or weekDay == "Sat" or weekDay == "Sun")
+    do_ce_5 = weekDay == "Tue" or weekDay == "Thu" or weekDay == "Sat" or weekDay == "Sun"
 
     helper = _create_helper()
     helper.use_refill = True
     helper.refill_with_item = True
     with helper._shellng_with:
+        if do_ce_5:
+            helper.main_handler(
+                clear_tasks=False,
+                task_list=tasks_ce_5,
+                auto_close=False
+            )
         helper.main_handler(
             clear_tasks=False,
-            task_list=tasks_ce_5 if do_ce_5 else tasks_1_7,
+            task_list=tasks_1_7,
             auto_close=False
         )
         helper.my_building()
