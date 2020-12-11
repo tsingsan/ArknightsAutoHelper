@@ -645,24 +645,38 @@ class ArknightsHelper(object):
         else:
             return False
 
-        tryAgain = False
-        tags, tags_pos = imgreco.recruit.get_recruit_tags(self.adb.screenshot())
-        logger.info('可选标签：%s', ' '.join(tags))
-        try:
-            result = recruit_calc.calculate(tags)
-        except Exception as e:
-            tryAgain = True
-
-        if tryAgain:
-            self.__wait(SMALL_WAIT)
+        max_refresh_num = 3
+        while max_refresh_num > 0:
             tags, tags_pos = imgreco.recruit.get_recruit_tags(self.adb.screenshot())
             logger.info('可选标签：%s', ' '.join(tags))
-            result = recruit_calc.calculate(tags)
+            try:
+                result = recruit_calc.calculate(tags)
+            except Exception as e:
+                self.__wait(SMALL_WAIT)
+                tags, tags_pos = imgreco.recruit.get_recruit_tags(self.adb.screenshot())
+                logger.info('可选标签：%s', ' '.join(tags))
+                try:
+                    result = recruit_calc.calculate(tags)
+                except:
+                    send_message("无法识别标签: " +  ' '.join(tags))
+                    return False
 
-        if any('机械' in tag or '资深' in tag for tag in tags):
-            logger.info('计算结果：%s', repr(result))
-            send_message(' '.join(tags))
-            return False
+            if any('资深' in tag for tag in tags):
+                logger.info('计算结果：%s', repr(result))
+                send_message(' '.join(tags))
+                return False
+
+            if result[0][2] > 0:
+                break
+
+            if not self.screenshot_and_click("recruit/refresh.png"):
+                break
+            self.__wait(TINY_WAIT)
+            if not self.screenshot_and_click("recruit/red_ok.png"):
+                break
+            self.__wait(SMALL_WAIT)
+            max_refresh_num -= 1
+
 
         candidate = result[0]
         if result[0][2] == 0:
@@ -885,9 +899,14 @@ class ArknightsHelper(object):
             logger.info('结束任务, 超时 ' + img_path)
             sys.exit(2)
 
-    # def test(self):
-    #     screenshot = self.adb.screenshot()
-    #     tar = imgreco.common.find_target(screenshot, "building/add.png")
+    def test(self):
+        from . import recruit_calc
+        logger.info('识别招募标签')
+        tags = ["生存", "输出", "防护", "近战位"]
+        logger.info('可选标签：%s', ' '.join(tags))
+        result = recruit_calc.calculate(tags)
+        for res in result:
+            print (res)
 
     def login(self, username, userpass):
         self.wait_and_click("login/start.png")
@@ -1017,7 +1036,7 @@ class ArknightsHelper(object):
             slots = imgreco.common.find_targets(screenshot, "building/add.png")
             logger.info('进入制造站 ' + factory_item)
 
-            if factory_item and len(slots) > 1:
+            if factory_item and len(slots) > 2:
                 self.tap_rect(slots[0])
                 self.__wait(TINY_WAIT)
 
@@ -1124,7 +1143,44 @@ class ArknightsHelper(object):
                 self.screenshot_and_click("building/confirm.png")
 
             self.nav_back(TINY_WAIT)
+            i += 1
 
+        i = 0
+        while i < 1:
+            originX = self.viewport[0] // 2 + randint(-100, 100)
+            originY = self.viewport[1] // 2 + randint(-100, 100)
+            self.adb.touch_swipe2((originX, originY), (-100.0 * uniform(0.8, 1.2), 0), 255)
+            self.__wait(1)
+
+            screenshot = self.adb.screenshot()
+            tar = imgreco.common.find_target(screenshot, "building/office.png")
+            if tar:
+                self.tap_rect(tar)
+                self.__wait(TINY_WAIT)
+            else:
+                break
+
+            screenshot = self.adb.screenshot()
+            tar = imgreco.common.find_target(screenshot, "building/people.png")
+            if tar:
+                self.tap_rect(tar)
+                self.__wait(TINY_WAIT)
+            elif imgreco.common.find_target(screenshot, "building/people_inverse.png") is None:
+                break
+
+            screenshot = self.adb.screenshot()
+            slots = imgreco.common.find_targets(screenshot, "building/add.png")
+            if len(slots) > 0:
+                self.tap_rect(slots[0])
+                self.__wait(TINY_WAIT)
+
+                screenshot = self.adb.screenshot()
+                target = imgreco.common.find_target(screenshot, "building/buff_people.png")
+                if target:
+                    self.tap_rect(target)
+                self.screenshot_and_click("building/confirm.png")
+
+            self.nav_back(TINY_WAIT)
             i += 1
 
     def get_building(self):
