@@ -1002,6 +1002,40 @@ class ArknightsHelper(object):
             i += 1
 
         i = 0
+        while i < 1:
+            screenshot = self.adb.screenshot()
+            tar = imgreco.common.find_target(screenshot, "building/center.png")
+            if tar:
+                self.tap_rect(tar)
+                self.__wait(TINY_WAIT)
+            else:
+                break
+
+            screenshot = self.adb.screenshot()
+            tar = imgreco.common.find_target(screenshot, "building/people.png")
+            if tar:
+                self.tap_rect(tar)
+                self.__wait(TINY_WAIT)
+            elif imgreco.common.find_target(screenshot, "building/people_inverse.png") is None:
+                break
+
+            screenshot = self.adb.screenshot()
+            slots = imgreco.common.find_targets(screenshot, "building/add.png")
+            print (len(slots))
+            if len(slots) > 3:
+                self.tap_rect(slots[0])
+                self.__wait(TINY_WAIT)
+
+                screenshot = self.adb.screenshot()
+                target = imgreco.common.find_target(screenshot, "building/buff_center.png")
+                if target:
+                    self.tap_rect(target)
+                self.screenshot_and_click("building/confirm.png")
+
+            self.nav_back(TINY_WAIT)
+            i += 1
+
+        i = 0
         while i < 4:
             originX = self.viewport[0] // 2 + randint(-100, 100)
             originY = self.viewport[1] // 2 + randint(-100, 100)
