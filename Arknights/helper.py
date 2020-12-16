@@ -517,6 +517,10 @@ class ArknightsHelper(object):
                     self.tap_rect(imgreco.common.get_dialog_right_button_rect(screenshot))
                     self.__wait(3)
                     continue
+                elif '好友列表' in ocr: 
+                    self.tap_rect(imgreco.common.get_dialog_right_button_rect(screenshot))
+                    self.__wait(5)
+                    continue
                 elif '招募干员' in ocr or '加急' in ocr:
                     self.tap_rect(imgreco.common.get_dialog_left_button_rect(screenshot))
                     self.__wait(3)
@@ -864,13 +868,33 @@ class ArknightsHelper(object):
         self.tap_quadrilateral(imgreco.main.get_friend_build(screenshot))
         self.__wait(MEDIUM_WAIT)
         building_count = 0
-        while building_count <= 11:
-            screenshot = self.adb.screenshot()
-            self.tap_quadrilateral(imgreco.main.get_next_friend_build(screenshot))
+        while self.screenshot_and_click("credit/next_friend.png"):
             self.__wait(MEDIUM_WAIT)
             building_count = building_count + 1
             logger.info('访问第 %s 位好友', building_count)
         logger.info('信赖领取完毕')
+
+    def use_credit(self):
+        self.back_to_main()
+        self.screenshot_and_click("main/shop.png")
+        self.__wait(MEDIUM_WAIT)
+        self.screenshot_and_click("credit/credit_banner.png")
+        self.__wait(TINY_WAIT)
+        screenshot = self.adb.screenshot()
+        targets = imgreco.common.find_targets(screenshot, "credit/onsale.png")
+        for tar in targets:
+            # title = screenshot.crop((tar[0] + 50, tar[1] - 50, tar[0] + 180, tar[1] - 5)).convert('L')
+            # recruit_logger.logimage(title)
+            self.tap_rect(tar)
+            self.__wait(TINY_WAIT)
+            self.screenshot_and_click("credit/buy.png")
+            self.__wait(MEDIUM_WAIT)
+
+            screenshot = self.adb.screenshot()
+            if imgreco.common.check_get_item_popup(screenshot):
+                self.tap_rect(imgreco.common.get_reward_popup_dismiss_rect(self.viewport))
+                self.__wait(SMALL_WAIT)
+
 
     def screenshot_and_click(self, img_path):
         screenshot = self.adb.screenshot()
@@ -1035,6 +1059,7 @@ class ArknightsHelper(object):
             self.nav_back(TINY_WAIT)
             i += 1
 
+        drone_used = False
         i = 0
         while i < 4:
             originX = self.viewport[0] // 2 + randint(-100, 100)
@@ -1124,6 +1149,7 @@ class ArknightsHelper(object):
                     self.screenshot_and_click("building/achieve.png")
                     self.__wait(TINY_WAIT)
                     self.nav_back(TINY_WAIT)
+                    drone_used = True
 
             self.nav_back(TINY_WAIT)
 
@@ -1175,6 +1201,26 @@ class ArknightsHelper(object):
                 for target in targets[:3]:
                     self.tap_rect(target)
                 self.screenshot_and_click("building/confirm.png")
+
+            if not drone_used:
+                screenshot = self.adb.screenshot()
+                tar = imgreco.common.find_target(screenshot, "building/bill_gold.png")
+                if tar:
+                    self.tap_rect(tar)
+                    self.__wait(TINY_WAIT)
+                    self.tap_rect(tar)
+                    self.__wait(SMALL_WAIT)
+                    while self.screenshot_and_click("building/drone_assist.png"):
+                        drone_used = True
+                        self.__wait(TINY_WAIT)
+                        self.screenshot_and_click("building/most_accelerate.png")
+                        self.__wait(TINY_WAIT)
+                        self.screenshot_and_click("building/confirm_accelerate.png")
+                        self.__wait(TINY_WAIT)
+                        if self.screenshot_and_click("building/bill_done.png"):
+                            self.__wait(MEDIUM_WAIT)
+                        else:
+                            break
 
             self.nav_back(TINY_WAIT)
             i += 1
