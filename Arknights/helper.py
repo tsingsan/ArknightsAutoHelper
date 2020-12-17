@@ -877,9 +877,17 @@ class ArknightsHelper(object):
     def use_credit(self):
         self.back_to_main()
         self.screenshot_and_click("main/shop.png")
-        self.__wait(MEDIUM_WAIT)
+        self.__wait(SMALL_WAIT)
         self.screenshot_and_click("credit/credit_banner.png")
         self.__wait(TINY_WAIT)
+
+        if self.screenshot_and_click("credit/receive_credit.png"):
+            self.__wait(SMALL_WAIT)
+            screenshot = self.adb.screenshot()
+            if imgreco.common.check_get_item_popup(screenshot):
+                self.tap_rect(imgreco.common.get_reward_popup_dismiss_rect(self.viewport))
+                self.__wait(SMALL_WAIT)
+
         screenshot = self.adb.screenshot()
         targets = imgreco.common.find_targets(screenshot, "credit/onsale.png")
         for tar in targets:
@@ -888,7 +896,11 @@ class ArknightsHelper(object):
             self.tap_rect(tar)
             self.__wait(TINY_WAIT)
             self.screenshot_and_click("credit/buy.png")
-            self.__wait(MEDIUM_WAIT)
+            self.__wait(SMALL_WAIT)
+            screenshot = self.adb.screenshot()
+            if imgreco.common.find_target(screenshot, "credit/buy.png"): #still see the buy button means not enough credit
+                self.nav_back()
+                break
 
             screenshot = self.adb.screenshot()
             if imgreco.common.check_get_item_popup(screenshot):
@@ -1221,6 +1233,7 @@ class ArknightsHelper(object):
                             self.__wait(MEDIUM_WAIT)
                         else:
                             break
+                    self.nav_back(TINY_WAIT)
 
             self.nav_back(TINY_WAIT)
             i += 1
