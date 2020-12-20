@@ -59,7 +59,7 @@ def get_setting_back_rect(viewport):
     vw, vh = util.get_vwvh(viewport)
     return (4.722 * vh, 3.750 * vh, 19.444 * vh, 8.333 * vh)
 
-def find_target(img, target, ratio=0.9):
+def find_target(img, target, ratio=0.9, debug=True):
     # raise NotImplementedError
     scale = 1
     if img.height != 720:
@@ -69,7 +69,8 @@ def find_target(img, target, ratio=0.9):
     template = resources.load_image_cached(target, 'L')
     mtresult = cv.matchTemplate(np.asarray(source), np.asarray(template), cv.TM_CCOEFF_NORMED)
     maxidx = np.unravel_index(np.argmax(mtresult), mtresult.shape)
-    print ("%.2f: %s" % (mtresult[maxidx], target))
+    if debug:
+        print ("%.2f: %s" % (mtresult[maxidx], target))
     if mtresult[maxidx] < ratio:
         return None
     y, x = maxidx

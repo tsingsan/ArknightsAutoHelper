@@ -385,6 +385,18 @@ class ArknightsHelper(object):
                 return
 
             if smobj.prepare_reco['consume_ap']:
+                tar = imgreco.common.find_target(screenshot, "end_operation/recordtime.png", 0.9, False)
+                if tar:
+                    logger.info('剿灭战斗结束')
+                    self.operation_time.append(t)
+                    self.tap_rect(tar)
+                    self.__wait(MEDIUM_WAIT)
+                    screenshot = self.adb.screenshot()
+                    if imgreco.common.find_target(screenshot, "end_operation/weeklyreport.png"):
+                        smobj.state = on_end_operation
+                        return
+
+            if smobj.prepare_reco['consume_ap']:
                 detector = imgreco.end_operation.check_end_operation
             else:
                 detector = imgreco.end_operation.check_end_operation_alt
@@ -936,13 +948,42 @@ class ArknightsHelper(object):
             sys.exit(2)
 
     def test(self):
-        from . import recruit_calc
-        logger.info('识别招募标签')
-        tags = ["生存", "输出", "防护", "近战位"]
-        logger.info('可选标签：%s', ' '.join(tags))
-        result = recruit_calc.calculate(tags)
-        for res in result:
-            print (res)
+        screenshot = self.adb.screenshot()
+        tar = imgreco.common.find_target(screenshot, "end_operation/recordtime.png")
+        if tar:
+            self.tap_rect(tar)
+            self.__wait(SMALL_WAIT)
+
+        if imgreco.common.find_target(screenshot, "end_operation/weeklyreport.png"):
+            logger.info('战斗结束')
+
+            screenshot = self.adb.screenshot()
+            logger.info('离开结算画面')
+            self.tap_rect(imgreco.end_operation.get_dismiss_end_operation_rect(self.viewport))
+            reportresult = penguin_stats.reporter.ReportResult.NotReported
+            try:
+                # 掉落识别
+                drops = imgreco.end_operation.recognize(screenshot)
+                logger.debug('%s', repr(drops))
+                logger.info('掉落识别结果：%s', format_recoresult(drops))
+                log_total = len(self.loots)
+                for _, group in drops['items']:
+                    for name, qty in group:
+                        if name is not None and qty is not None:
+                            self.loots[name] = self.loots.get(name, 0) + qty
+                if log_total:
+                    self.log_total_loots()
+                if self.use_penguin_report:
+                    reportresult = self.penguin_reporter.report(drops)
+                    if isinstance(reportresult, penguin_stats.reporter.ReportResult.Ok):
+                        logger.debug('report hash = %s', reportresult.report_hash)
+            except Exception as e:
+                logger.error('', exc_info=True)
+            if self.use_penguin_report and reportresult is penguin_stats.reporter.ReportResult.NotReported:
+                filename = os.path.join(config.SCREEN_SHOOT_SAVE_PATH, '未上报掉落-%d.png' % time.time())
+                with open(filename, 'wb') as f:
+                    screenshot.save(f, format='PNG')
+                logger.error('未上报掉落截图已保存到 %s', filename)
 
     def login(self, username, userpass):
         self.wait_and_click("login/start.png")

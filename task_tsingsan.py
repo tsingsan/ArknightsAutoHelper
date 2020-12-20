@@ -31,6 +31,6 @@ if __name__ == '__main__':
         )
         helper.my_building()
         helper.recruit_daily()
-        helper.clear_daily_task()
         helper.get_credit()
         helper.use_credit()
+        helper.clear_daily_task()
