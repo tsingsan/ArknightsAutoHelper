@@ -735,7 +735,7 @@ class ArknightsHelper(object):
         self.__wait(SMALL_WAIT)
         self.screenshot_and_click("recruit/skip.png")
 
-        self.__wait(TINY_WAIT)
+        self.__wait(SMALL_WAIT)
         screenshot = self.adb.screenshot()
         recruit_logger.logimage(imgreco.imgops.scale_to_height(screenshot, 240))
         self.tap_rect((525, 415, 750, 445))
