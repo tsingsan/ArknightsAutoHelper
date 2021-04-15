@@ -708,7 +708,7 @@ class ArknightsHelper(object):
         screenshot = self.adb.screenshot()
         tar = imgreco.common.find_target(screenshot, "recruit/time_add.png")
         if tar:
-            click_num = 9
+            click_num = 8
             while click_num > 0:
                 self.tap_rect((tar[0] + (tar[2] - tar[0])/2, tar[1], tar[2], tar[3]))
                 click_num -= 1
