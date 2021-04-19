@@ -42,8 +42,8 @@ if __name__ == '__main__':
                 task_list=tasks_1_7,
                 auto_close=False
             )
-        #helper.my_building()
-        #helper.recruit_daily()
+        helper.my_building()
+        helper.recruit_daily()
         helper.get_credit()
         helper.use_credit()
         helper.clear_task()
