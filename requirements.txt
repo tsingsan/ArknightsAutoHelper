@@ -1,9 +1,8 @@
-dataclasses==0.7; python_version < '3.7'
-coloredlogs==14.0
-numpy==1.19.1
-opencv-python==4.4.0.42
-Pillow==7.2.0
-requests==2.24.0
-ruamel.yaml==0.16.10
-colorama==0.4.3; sys_platform == 'win32'
+coloredlogs==15.0
+numpy==1.20.1
+opencv-python==4.5.1.48
+Pillow==8.1.1
+requests==2.25.1
+ruamel.yaml==0.16.12
+colorama==0.4.4; sys_platform == 'win32'
 ./vendor/penguin_client

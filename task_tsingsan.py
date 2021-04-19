@@ -23,7 +23,7 @@ if __name__ == '__main__':
     helper.refill_with_item = True
     helper.refill_with_item_close_time_only = True
 
-    with helper._shellng_with:
+    with helper._shellng_context:
         if do_battle:
             if do_ce_5:
                 helper.main_handler(
@@ -42,8 +42,8 @@ if __name__ == '__main__':
                 task_list=tasks_1_7,
                 auto_close=False
             )
-        helper.my_building()
-        helper.recruit_daily()
+        #helper.my_building()
+        #helper.recruit_daily()
         helper.get_credit()
         helper.use_credit()
-        helper.clear_daily_task()
+        helper.clear_task()

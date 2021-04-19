@@ -23,6 +23,11 @@
 ### **安装**
 
 #### 从源代码安装
+
+需要 Python 3.8 或以上版本。
+
+> ⚠ **不建议从 GitHub 下载 zip 源码包安装**：这样做会丢失版本信息，且不便于后续更新。
+
 ```bash
 git clone https://github.com/ninthDevilHAUNSTER/ArknightsAutoHelper
 cd ArknightsAutoHelper
@@ -42,9 +47,15 @@ pip install -r requirements.txt
 
 #### 二进制包（Windows）
 
-从 Actions artifacts 中下载 PyInstaller 打包后的二进制包，二进制包随源代码同步更新。
+:wink: 从 nightly.link 中下载 PyInstaller 打包后的二进制包，二进制包随源代码同步更新。
+
+[ninthDevilHAUNSTER/ArknightsAutoHelper](https://nightly.link/ninthDevilHAUNSTER/ArknightsAutoHelper/workflows/pyinstaller-win/master)
+
+:satisfied: 从 Actions artifacts 中下载 PyInstaller 打包后的二进制包，二进制包随源代码同步更新。
 
 [![make PyInstaller packaged release](https://github.com/ninthDevilHAUNSTER/ArknightsAutoHelper/workflows/make%20PyInstaller%20packaged%20release/badge.svg?branch=master)](https://github.com/ninthDevilHAUNSTER/ArknightsAutoHelper/actions?query=workflow%3A%22make+PyInstaller+packaged+release%22+is%3Asuccess)
+
+
 
 #### OCR 依赖
 目前 OCR 用于：
@@ -54,7 +65,7 @@ pip install -r requirements.txt
 
 如果 OCR 不可用，则不能自动处理以上情况。
 
-目前可以使用 tesseract（需另行安装）、Windows OCR（需要 Windows 10 简体中文系统或语言包）和百度 OCR API，请参阅 [OCR 安装说明](OCR_install.md)。
+目前可以使用 tesseract（需另行安装）、Windows OCR（需要 Windows 10 简体中文系统或语言包）和百度 OCR API，请参阅 [OCR 安装说明](https://github.com/ninthDevilHAUNSTER/ArknightsAutoHelper/wiki/OCR-%E5%AE%89%E8%A3%85%E8%AF%B4%E6%98%8E)。
 
 
 ###  **环境与分辨率**
@@ -69,7 +80,7 @@ pip install -r requirements.txt
 
 ### **ADB 连接**
 
-虽然脚本不依赖 `adb` 工具进行操作，但是依然需要 ADB server 连接到模拟器/设备，请确认 `adb devices` 中列出了目标模拟器/设备：
+请确认 `adb devices` 中列出了目标模拟器/设备：
 
     $ adb devices
     emulator-5554   device
@@ -80,27 +91,38 @@ pip install -r requirements.txt
 
 #### 常见问题
 
+##### ADB server 相关
+
 * 部分模拟器（如 MuMu、BlueStacks）需要自行启动 ADB server。
 * 部分模拟器（如 MuMu）不使用标准模拟器 ADB 端口，ADB server 无法自动探测，需要另行 adb connect。
 * 部分模拟器（如夜神）会频繁使用自带的旧版本 ADB 挤掉用户自行启动的新版 ADB。
 
-以上问题可自动处理，请参阅[配置说明](#额外设置)。
+可以参阅[配置说明](#额外设置)以配置自动解决以上问题。
+
+##### 其他
+
+* 部分非 VMM 模拟器（声称“不需要开启 VT”，如 MuMu 星云引擎）不提供 ADB 接口。
 
 ### **额外设置**
 
 关于额外设置请移步到 [config/config-template.yaml](config/config-template.yaml) 中查看
 
 #### **日志说明**
-
-日志采用```import logging```在log目录下生成**ArknightsAutoHelper.log**推荐用Excel打开，分割符号为“!”
+运行日志（文本）采用```import logging```在log目录下生成**ArknightsAutoHelper.log**推荐用Excel打开，分割符号为“!”
 
 相关配置文件在```config```目录下的**logging.yaml**，由于过于复杂 ~~其实也没确定理解的对不对~~ 这里请自行研究，欢迎讨论
 
 日志目前启动按照时间自动备份功能，间隔为一天一次，保留最多7份。
 
+图像识别日志为 `log/*.html`，相应识别模块初始化时会清空原有内容。
+
+多开时日志文件名会出现实例 ID，如 `ArknightsAutoHelper.1.log`。
+
+**报告 issue 时，建议附上日志以便定位问题。**
+
 ## 0x02 ArknightsHelper 命令行启动
 
-> 💡 Windows：命令行功能在 Windows 10 1607 (build 14393) 及以上版本上体验最佳。
+> 💡 Windows：命令行功能在 Windows 10 1607 (build 14393) 及以上版本上体验最佳。非简体中文系统可能无法在 Windows 命令行窗口中正确显示简体中文文字，可尝试使用 Windows Terminal。
 
 ### 命令行启动说明
 
@@ -115,7 +137,7 @@ commands (prefix abbreviation accepted):
     auto [+-rR[N]] stage1 count1 [stage2 count2] ...
         按顺序挑战指定关卡特定次数直到理智不足
     collect
-        收集每日任务奖励
+        收集每日任务和每周任务奖励
     recruit [tags ...]
         公开招募识别/计算，不指定标签则从截图中识别
     interactive
@@ -194,7 +216,7 @@ $ python ArknightsShell.py -s -t slim:99
 
 ### 主战斗模块
 
-主战斗模块可以从几乎任何位置（理论上有返回键的页面）开始任务序列。
+1. 主战斗模块可以从几乎任何位置（理论上有返回键的页面）开始任务序列。
 
 \* 该模块支持关卡有限，请等待后续更新
 
@@ -203,6 +225,10 @@ python3 akhelper.py auto   5-1 2   5-2 3
 # 按顺序刷 5-1 关卡 2 次，5-2 关卡 3 次
 ```
 
+2. 启用 ocr 方式进行跳转关卡的跳转方法: 将 `config.yaml` 下的 `behavior/use_ocr_goto_stage` 更改为 true 即可.
+
+此方式支持第一章至第七章大部分的关卡.
+
 <details><summary>旧版命令行接口</summary>
 
 ```bash
@@ -210,6 +236,41 @@ $ python ArknightsShell.py -b -t 5-1:2|5-2:3
 ```
 
 </details>
+
+
+
+
+### 通过输入所需材料数量创建刷图计划并执行
+
+`根据材料创建刷图计划.bat` 文件可以通过企鹅物流的接口, 根据输入的材料创建刷图计划 (支持自动获取当前库存):
+
+```
+# 缓存将在第一次启动脚本时创建, 如果没有新的地图或材料, 这个缓存没必要更新.
+是否刷新企鹅物流缓存(缓存时间: ....)[y/N]:
+材料列表：
+序号: 0, 材料等级: 3, 名称: 赤金
+序号: 1, 材料等级: 3, 名称: 提纯源岩
+...
+...
+# 需要 10 个提纯源岩
+材料序号/需求数量(输入为空时结束):1/10
+材料序号/需求数量(输入为空时结束):
+
+# 默认 n, 输入 y 将自动读取游戏中的库存, 并加入到刷图计划的计算中
+是否获取当前库存材料数量(y,N):y
+
+刷图计划:
+关卡 [...] 次数 2
+...
+预计消耗理智: ...
+刷图计划已保存至: config/plan.json
+```
+
+`执行刷图计划.bat` 文件将从上一步生成的 config/plan.json 获取并执行刷图计划. 
+
+如果当前的理智不足以完成刷图计划, 将保存已经刷图的次数, 并在下次运行时恢复.
+
+如果完成刷图计划后, 当前的理智还有剩余, 且 config 中配置了 `plan/idle_stage`, 那么剩余的理智将用来刷这个关卡.
 
 ## 0x03 ArknightsHelper 自定义脚本启动
 
@@ -242,30 +303,33 @@ $ python ArknightsShell.py -b -t 5-1:2|5-2:3
 
 ### 关于一些常见的问题
 
-##### 1. 分辨率/模拟器/路径问题
+#### 1. 分辨率/模拟器/路径问题
 
 ☞ [环境与分辨率](#环境与分辨率)
 
-##### 2. 我想跑一些别的关卡，但是提示我关卡不支持。
+#### 2. 我想跑一些别的关卡，但是提示我关卡不支持。
 
 这些关卡可以通过 ~~slim~~ quick 模式来启动。
 
-##### 3. OCR 模块可以不装嚒？
+#### 3. OCR 模块可以不装嚒？
 
 最好安装，在之后的版本迭代中会对没有OCR依赖的用户越来越不友好
 
-##### 4. 我不会python|我电脑里没装Python，我能用这个嚒？
+#### 4. 我不会python|我电脑里没装Python，我能用这个嚒？
 
 可以使用[二进制包](#二进制包windows)
 
-##### 5. 之后会收费么？
+#### 5. 之后会收费么？
 
 不会，该项目一直开源。实际上作者还有别的事情要做，代码可能突然会有一段时间不更新了。欢迎来pull代码以及加群
 
-##### 6. ~~关于mumu模拟器的adb在哪里的问题~~【目前已经解决】
+#### 6. ~~关于mumu模拟器的adb在哪里的问题~~【目前已经解决】
 
 ☞ [常见问题](#常见问题)
 
+#### 7. 我想将这个脚本适配到其他服务器
+
+☞ [Porting to Another Server](https://github.com/ninthDevilHAUNSTER/ArknightsAutoHelper/wiki/Porting-to-Another-Server)
 
 ### 自定义开发与更多功能
 

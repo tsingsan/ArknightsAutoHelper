@@ -5,25 +5,22 @@ import platform
 
 import numpy as np
 
-def getlibname(base, sover=None):
-    system = platform.system()
-    if system == 'Windows':
-        return 'lib{}-{}.dll'.format(base, sover) if sover is not None else 'lib{}.dll'.format(base)
-    else:
-        return base
-
-
 def resolve_libpath():
-    lib = ctypes.util.find_library('tesseract')
-    if lib:
-        return lib
-    lib = ctypes.util.find_library(getlibname('tesseract', '5'))
-    if lib:
-        return lib
-    lib = ctypes.util.find_library(getlibname('tesseract', '4'))
-    if lib:
-        return lib
-
+    names = [
+        # common library name for UNIX-like systems
+        'tesseract',
+        # MSVC library
+        'tesseract41.dll',
+        'tesseract50.dll',
+        # MinGW library
+        'libtesseract-4.dll',
+        'libtesseract-5.dll'
+    ]
+    for name in names:
+        lib = ctypes.util.find_library(name)
+        if lib:
+            return lib
+    return None
 
 
 def resolve_datapath():
@@ -46,7 +43,7 @@ if libname:
     tesseract = ctypes.cdll.LoadLibrary(libname)
     TessVersion = cfunc(tesseract, 'TessVersion', ctypes.c_char_p)
     TessBaseAPICreate = cfunc(tesseract, 'TessBaseAPICreate', ctypes.c_void_p)
-    TessBaseAPIInit4 = cfunc(tesseract, 'TessBaseAPIInit4', ctypes.c_int, ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_int)
+    TessBaseAPIInit4 = cfunc(tesseract, 'TessBaseAPIInit4', ctypes.c_int, ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t, ctypes.c_int)
     TessBaseAPISetImage = cfunc(tesseract, 'TessBaseAPISetImage', None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int)
     TessBaseAPIGetHOCRText = cfunc(tesseract, 'TessBaseAPIGetHOCRText', ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int)
     TessDeleteText = cfunc(tesseract, 'TessDeleteText', None, ctypes.c_void_p)
