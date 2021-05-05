@@ -1238,13 +1238,13 @@ class ArknightsHelper(object):
                 elif factory_item == "gem":
                     targets.extend(imgreco.common.find_targets(screenshot, "building/buff_gem.png"))
 
-                if len(targets) < 2:
+                if len(targets) < 3:
                     targets.extend(imgreco.common.find_targets(screenshot, "building/buff_common.png"))
-                if len(targets) < 2:
+                if len(targets) < 3:
                     targets.extend(imgreco.common.find_targets(screenshot, "building/buff_common2.png"))
-                if len(targets) < 2:
+                if len(targets) < 3:
                     targets.extend(imgreco.common.find_targets(screenshot, "building/buff_common3.png"))
-                if len(targets) < 2:
+                if len(targets) < 3:
                     targets.extend(imgreco.common.find_targets(screenshot, "building/buff_common4.png"))
 
                 if len(targets) < 2:
@@ -1252,7 +1252,7 @@ class ArknightsHelper(object):
                     if wendy:
                         targets = [wendy]
 
-                for target in targets[:2]:
+                for target in targets[:3]:
                     self.tap_rect(target)
                 self.screenshot_and_click("building/confirm.png")
 
@@ -1317,15 +1317,22 @@ class ArknightsHelper(object):
                 screenshot = self.adb.screenshot()
 
                 targets = []
-                targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader1.png"))
-                if len(targets) < 3:
-                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader2.png"))
-                if len(targets) < 3:
-                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader3.png"))
-                if len(targets) < 3:
-                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader4.png"))
-                if len(targets) < 3:
-                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader5.png"))
+
+                tar_texas = imgreco.common.find_target(screenshot, "building/chara_texas.png")
+                tar_lappland = imgreco.common.find_target(screenshot, "building/chara_lappland.png")
+                tar_exusiai = imgreco.common.find_target(screenshot, "building/chara_exusiai.png")
+                if tar_texas and tar_lappland and tar_exusiai:
+                    targets = [tar_texas, tar_lappland, tar_exusiai]
+                else:
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader1.png"))
+                    if len(targets) < 3:
+                        targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader2.png"))
+                    if len(targets) < 3:
+                        targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader3.png"))
+                    if len(targets) < 3:
+                        targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader4.png"))
+                    if len(targets) < 3:
+                        targets.extend(imgreco.common.find_targets(screenshot, "building/buff_trader5.png"))
 
                 for target in targets[:3]:
                     self.tap_rect(target)
