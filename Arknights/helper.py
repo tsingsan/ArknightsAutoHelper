@@ -550,6 +550,10 @@ class ArknightsHelper(object):
                 continue
             retry_count += 1
             if retry_count > max_retry:
+                filename = os.path.join(config.SCREEN_SHOOT_SAVE_PATH, '未知画面-%d.png' % time.time())
+                with open(filename, 'wb') as f:
+                    screenshot.save(f, format='PNG')
+
                 raise RuntimeError('未知画面')
         logger.info("已回到主页")
 
@@ -1164,6 +1168,8 @@ class ArknightsHelper(object):
             elif imgreco.common.find_target(screenshot, "building/people_inverse.png") is None:
                 break
 
+            logger.info('进入控制中心')
+
             screenshot = self.adb.screenshot()
             slots = imgreco.common.find_targets(screenshot, "building/add.png")
             print (len(slots))
@@ -1172,9 +1178,22 @@ class ArknightsHelper(object):
                 self.__wait(TINY_WAIT)
 
                 screenshot = self.adb.screenshot()
-                target = imgreco.common.find_target(screenshot, "building/buff_center.png")
-                if target:
+                targets = []
+
+                tar = imgreco.common.find_target(screenshot, "building/buff_center.png")
+                if tar:
+                    targets.append(tar)
+
+                tar = imgreco.common.find_target(screenshot, "building/buff_center_factory.png")
+                if tar:
+                    targets.append(tar)
+
+                if len(targets) > 0:
+                    targets.extend(imgreco.common.find_targets(screenshot, "building/buff_center_rainbow.png"))
+                
+                for target in targets[:5]:
                     self.tap_rect(target)
+
                 self.screenshot_and_click("building/confirm.png")
 
             self.nav_back(TINY_WAIT)
@@ -1350,6 +1369,46 @@ class ArknightsHelper(object):
                         else:
                             break
                     self.nav_back(TINY_WAIT)
+
+            self.nav_back(TINY_WAIT)
+            i += 1 
+
+        i = 0
+        while i < 3:
+            originX = self.viewport[0] // 2 + randint(-100, 100)
+            originY = self.viewport[1] // 2 + randint(-100, 100)
+            self.adb.touch_swipe2((originX, originY), (100.0 * uniform(0.8, 1.2), 0), 255)
+            self.__wait(1)
+
+            screenshot = self.adb.screenshot()
+            targets = imgreco.common.find_targets(screenshot, "building/power_plant.png")
+            if len(targets) <= i:
+                break
+
+            self.tap_rect(targets[i])
+            self.__wait(TINY_WAIT)
+
+            screenshot = self.adb.screenshot()
+            tar = imgreco.common.find_target(screenshot, "building/people.png")
+            if tar:
+                self.tap_rect(tar)
+                self.__wait(TINY_WAIT)
+            elif imgreco.common.find_target(screenshot, "building/people_inverse.png") is None:
+                break
+
+            logger.info('进入发电站')
+
+            screenshot = self.adb.screenshot()
+            slots = imgreco.common.find_targets(screenshot, "building/add.png")
+            if len(slots) > 0:
+                self.tap_rect(slots[0])
+                self.__wait(TINY_WAIT)
+
+                screenshot = self.adb.screenshot()
+                target = imgreco.common.find_target(screenshot, "building/buff_power.png", 0.8)
+                if target:
+                    self.tap_rect(target)
+                self.screenshot_and_click("building/confirm.png")
 
             self.nav_back(TINY_WAIT)
             i += 1
