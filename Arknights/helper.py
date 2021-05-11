@@ -938,6 +938,30 @@ class ArknightsHelper(object):
         else:
             raise NotImplementedError()
 
+    def repeat_last_stage(self, stages, count):
+        import imgreco.stage_ocr
+        logger.info('进入上次作战')
+        self.tap_quadrilateral(imgreco.main.get_ballte_corners(self.adb.screenshot()))
+        self.__wait(TINY_WAIT)
+
+        screenshot = self.adb.screenshot()
+        tar = imgreco.common.find_target(screenshot, "before_operation/goto_last_stage.png")
+        if not tar:
+            return
+
+        content = screenshot.crop((1160, 568, 1258, 604))
+        stage_id = imgreco.stage_ocr.do_img_ocr(content)
+
+        if stage_id not in stages:
+            send_message("当前关卡为 %s, 取消作战" % stage_id)
+            return
+
+        self.tap_rect(tar)
+        self.module_battle_slim(
+            c_id=None,
+            set_count=count,
+        )
+
     def get_credit(self):
         logger.debug("helper.get_credit")
         logger.info("领取信赖")

@@ -13,10 +13,11 @@ if __name__ == '__main__':
 
     weekDay = time.ctime()[:3]
     curHour = int(time.ctime()[-13:-11])
-    do_ce_5 = weekDay == "Thu" or weekDay == "Sat" or weekDay == "Sun"
-    do_ca_5 = weekDay == "Tue" or weekDay == "Wed" or weekDay == "Fri"
 
     do_battle = sys.argv[1] != "nobattle" if len(sys.argv) > 1 else True
+    do_ce_5 = False# weekDay == "Thu" or weekDay == "Sat" or weekDay == "Sun"
+    do_ca_5 = False# weekDay == "Tue" or weekDay == "Wed" or weekDay == "Fri"
+    do_activity_stages = ['SV-8', 'SV-9']
 
     helper = _create_helper()
     helper.use_refill = True
@@ -25,23 +26,26 @@ if __name__ == '__main__':
 
     with helper._shellng_context:
         if do_battle:
-            if do_ce_5:
+            if len(do_activity_stages) > 0:
+                helper.repeat_last_stage(do_activity_stages, 99)
+            else:
+                if do_ce_5:
+                    helper.main_handler(
+                        clear_tasks=False,
+                        task_list=tasks_ce_5,
+                        auto_close=False
+                    )
+                elif do_ca_5:
+                    helper.main_handler(
+                        clear_tasks=False,
+                        task_list=tasks_ca_5,
+                        auto_close=False
+                    )
                 helper.main_handler(
                     clear_tasks=False,
-                    task_list=tasks_ce_5,
+                    task_list=tasks_1_7,
                     auto_close=False
                 )
-            elif do_ca_5:
-                helper.main_handler(
-                    clear_tasks=False,
-                    task_list=tasks_ca_5,
-                    auto_close=False
-                )
-            helper.main_handler(
-                clear_tasks=False,
-                task_list=tasks_1_7,
-                auto_close=False
-            )
         helper.my_building()
         helper.recruit_daily()
         helper.get_credit()
