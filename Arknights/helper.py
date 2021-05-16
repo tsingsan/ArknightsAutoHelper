@@ -642,7 +642,7 @@ class ArknightsHelper(object):
             return False
 
         max_refresh_num = 3
-        while max_refresh_num > 0:
+        while max_refresh_num >= 0:
             tags, tags_pos = imgreco.recruit.get_recruit_tags(self.adb.screenshot())
             logger.info('可选标签：%s', ' '.join(tags))
             try:
