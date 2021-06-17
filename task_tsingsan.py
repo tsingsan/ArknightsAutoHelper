@@ -17,7 +17,7 @@ if __name__ == '__main__':
     do_battle = sys.argv[1] != "nobattle" if len(sys.argv) > 1 else True
     do_ce_5 = False# weekDay == "Thu" or weekDay == "Sat" or weekDay == "Sun"
     do_ca_5 = False# weekDay == "Tue" or weekDay == "Wed" or weekDay == "Fri"
-    do_activity_stages = []
+    do_activity_stages = ["TW-8"]
 
     helper = _create_helper()
     helper.use_refill = True

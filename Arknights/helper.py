@@ -532,7 +532,7 @@ class ArknightsHelper(object):
             if dlgtype == 'yesno':
                 if '基建' in ocr or '停止招募' in ocr:
                     self.tap_rect(imgreco.common.get_dialog_right_button_rect(screenshot))
-                    self.__wait(3)
+                    self.__wait(5)
                     continue
                 elif '好友列表' in ocr: 
                     self.tap_rect(imgreco.common.get_dialog_right_button_rect(screenshot))
