@@ -940,6 +940,7 @@ class ArknightsHelper(object):
 
     def repeat_last_stage(self, stages, count):
         import imgreco.stage_ocr
+        self.back_to_main()
         logger.info('进入上次作战')
         self.tap_quadrilateral(imgreco.main.get_ballte_corners(self.adb.screenshot()))
         self.__wait(TINY_WAIT)
