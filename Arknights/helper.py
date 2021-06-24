@@ -695,7 +695,6 @@ class ArknightsHelper(object):
             return False
 
         self.screenshot_and_click("recruit/ok.png")
-        self.__wait(SMALL_WAIT)
 
         return True
 
@@ -730,6 +729,7 @@ class ArknightsHelper(object):
             if not self.recruit_add():
                 return
 
+            self.__wait(MEDIUM_WAIT)
             recruit_num -= 1
 
     def recruit_batched(self, recruit_num = 100):
@@ -739,12 +739,12 @@ class ArknightsHelper(object):
                 return
 
             self.screenshot_and_click("recruit/recruit_now.png")
-            self.__wait(TINY_WAIT)
+            #self.__wait(TINY_WAIT)
             screenshot = self.adb.screenshot()
             tar = imgreco.common.find_target(screenshot, "recruit/red_ok.png")
             if tar:
                 self.tap_rect(tar)
-                self.__wait(TINY_WAIT)
+                #self.__wait(TINY_WAIT)
             else:
                 return
 
