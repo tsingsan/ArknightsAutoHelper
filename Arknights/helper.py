@@ -611,16 +611,18 @@ class ArknightsHelper(object):
 
     def clear_task_worker(self):
         screenshot = self.adb.screenshot()
-        kickoff = True
         while True:
-            if imgreco.common.check_nav_button(screenshot) and not imgreco.task.check_collectable_reward(screenshot):
-                logger.info("奖励已领取完毕")
-                break
-            if kickoff:
-                logger.info('开始领取奖励')
-                kickoff = False
-            self.tap_rect(imgreco.task.get_collect_reward_button_rect(self.viewport))
+            if imgreco.common.check_nav_button(screenshot):
+                tar = imgreco.common.find_target(screenshot, "task/getall.png")
+                if tar:
+                    self.tap_rect(tar)
+                else:
+                    logger.info("奖励已领取完毕")
+                    break
+            else:
+                self.tap_rect(imgreco.task.get_collect_reward_button_rect(self.viewport))
             screenshot = self.adb.screenshot(cached=False)
+        self.__wait(SMALL_WAIT)
 
     def recruit(self):
         from . import recruit_calc
