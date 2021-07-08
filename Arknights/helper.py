@@ -489,10 +489,9 @@ class ArknightsHelper(object):
             raise StopIteration()
 
 
-    def back_to_main(self):  # 回到主页
+    def back_to_main(self, max_retry = 3):  # 回到主页
         logger.info("正在返回主页")
         retry_count = 0
-        max_retry = 3
         while True:
             screenshot = self.adb.screenshot()
 
@@ -555,6 +554,7 @@ class ArknightsHelper(object):
                     screenshot.save(f, format='PNG')
 
                 raise RuntimeError('未知画面')
+            self.__wait(2)
         logger.info("已回到主页")
 
     def module_battle(self,  # 完整的战斗模块
@@ -1097,7 +1097,8 @@ class ArknightsHelper(object):
         self.__wait(SMALL_WAIT, MANLIKE_FLAG=True)
         self.tap_rect((525, 468, 750, 498))
         self.wait_and_click("login/confirmLogin.png")
-        self.__wait(15, MANLIKE_FLAG=True)
+        self.__wait(10, MANLIKE_FLAG=True)
+        self.back_to_main(5)
 
     def nav_back(self, wait_time = SMALL_WAIT):
         screenshot = self.adb.screenshot()
