@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import json
 import re
@@ -15,15 +15,22 @@ import coloredlogs
 import numpy as np
 
 import config
-import imgreco
+import imgreco.common
+import imgreco.main
+import imgreco.task
+import imgreco.map
 import imgreco.imgops
 import penguin_stats.reporter
+from connector import auto_connect
 from connector.ADBConnector import ADBConnector, ensure_adb_alive
 from . import stage_path
+from .frontend import DummyFrontend
 from Arknights.click_location import *
 from Arknights.flags import *
-from util.exc_guard import guard
 from util.richlog import get_logger
+from util.excutil import guard
+
+from Arknights import frontend
 
 logger = logging.getLogger('helper')
 recruit_logger = get_logger('recruit_result')
@@ -65,15 +72,17 @@ def format_recoresult(recoresult):
 
 
 class ArknightsHelper(object):
-    def __init__(self, adb_host=None, device_connector=None):  # 当前绑定到的设备
-        ensure_adb_alive()
-        if device_connector is not None:
-            self.adb = device_connector
-        else:
-            self.adb = ADBConnector(adb_serial=adb_host)
-        self.viewport = self.adb.screen_size
+    def __init__(self, adb_host=None, device_connector=None, frontend=None):  # 当前绑定到的设备
+        self.adb = None
+        if adb_host is not None or device_connector is not None:
+            self.connect_device(device_connector, adb_serial=adb_host)
+        if frontend is None:
+            frontend = DummyFrontend()
+            if self.adb is None:
+                self.connect_device(auto_connect())
+        self.frontend = frontend
+        self.frontend.attach(self)
         self.operation_time = []
-        self.delay_impl = sleep
         if DEBUG_LEVEL >= 1:
             self.__print_info()
         self.refill_with_item = config.get('behavior/refill_ap_with_item', False)
@@ -86,21 +95,40 @@ class ArknightsHelper(object):
             self.penguin_reporter = penguin_stats.reporter.PenguinStatsReporter()
         self.refill_count = 0
         self.max_refill_count = None
-        if Fraction(self.viewport[0], self.viewport[1]) < Fraction(16, 9):
-            logger.warn('当前分辨率（%dx%d）不符合要求', self.viewport[0], self.viewport[1])
+
+        logger.debug("成功初始化模块")
+
+    def ensure_device_connection(self):
+        if self.adb is None:
+            raise RuntimeError('not connected to device')
+
+    def connect_device(self, connector=None, *, adb_serial=None):
+        if connector is not None:
+            self.adb = connector
+        elif adb_serial is not None:
+            self.adb = ADBConnector(adb_serial)
+        else:
+            self.adb = None
+            return
+        self.viewport = self.adb.screen_size
+        if self.viewport[1] < 720 or Fraction(self.viewport[0], self.viewport[1]) < Fraction(16, 9):
+            title = '设备当前分辨率（%dx%d）不符合要求' % (self.viewport[0], self.viewport[1])
+            body = '需要宽高比等于或大于 16∶9，且渲染高度不小于 720。'
+            details = None
             if Fraction(self.viewport[1], self.viewport[0]) >= Fraction(16, 9):
-                logger.info('屏幕截图可能需要旋转，请尝试在 device-config 中指定旋转角度')
+                body = '屏幕截图可能需要旋转，请尝试在 device-config 中指定旋转角度。'
                 img = self.adb.screenshot()
                 imgfile = os.path.join(config.SCREEN_SHOOT_SAVE_PATH, 'orientation-diagnose-%s.png' % time.strftime("%Y%m%d-%H%M%S"))
                 img.save(imgfile)
                 import json
-                logger.info('参考 %s 以更正 device-config.json[%s]["screenshot_rotate"]', imgfile, json.dumps(self.adb.config_key))
-
-        logger.debug("成功初始化模块")
+                details = '参考 %s 以更正 device-config.json[%s]["screenshot_rotate"]' % (imgfile, json.dumps(self.adb.config_key))
+            for msg in [title, body, details]:
+                if msg is not None:
+                    logger.warn(msg)
+            frontend.alert(title, body, 'warn', details)
 
     def __print_info(self):
         logger.info('当前系统信息:')
-        logger.info('ADB 服务器:\t%s:%d', *config.ADB_SERVER)
         logger.info('分辨率:\t%dx%d', *self.viewport)
         # logger.info('OCR 引擎:\t%s', ocr.engine.info)
         logger.info('截图路径:\t%s', config.SCREEN_SHOOT_SAVE_PATH)
@@ -135,11 +163,11 @@ class ArknightsHelper(object):
             logger.debug("成功启动游戏")
 
     def __wait(self, n=10,  # 等待时间中值
-               MANLIKE_FLAG=True):  # 是否在此基础上设偏移量
+               MANLIKE_FLAG=True, allow_skip=False):  # 是否在此基础上设偏移量
         if MANLIKE_FLAG:
             m = uniform(0, 0.3)
             n = uniform(n - m * 0.5 * n, n + m * n)
-        self.delay_impl(n)
+        self.frontend.delay(n, allow_skip)
 
     def mouse_click(self,  # 点击一个按钮
                     XY):  # 待点击的按钮的左上和右下坐标
@@ -188,7 +216,7 @@ class ArknightsHelper(object):
         message_shown = False
         while (t1 := time.monotonic()) < ts:
             if check_delay > 0:
-                self.__wait(check_delay, False)
+                self.__wait(check_delay, False, True)
             screenshot2 = shooter()
             mse = imgreco.imgops.compare_mse(screenshot, screenshot2)
             if mse <= threshold:
@@ -239,20 +267,23 @@ class ArknightsHelper(object):
         count = 0
         remain = 0
         try:
-            for count in range(set_count):
+            for _ in range(set_count):
                 # logger.info("开始第 %d 次战斗", count + 1)
                 self.operation_once_statemachine(c_id, )
-                logger.info("第 %d 次作战完成", count + 1)
-                if count != set_count - 1:
+                count += 1
+                logger.info("第 %d 次作战完成", count)
+                self.frontend.notify('completed-count', count)
+                if count != set_count:
                     # 2019.10.06 更新逻辑后，提前点击后等待时间包括企鹅物流
                     if config.reporter:
                         self.__wait(SMALL_WAIT, MANLIKE_FLAG=True)
                     else:
                         self.__wait(BIG_WAIT, MANLIKE_FLAG=True)
         except StopIteration:
+            # count: succeeded count
             logger.error('未能进行第 %d 次作战', count + 1)
             remain = set_count - count
-            if remain - 1 > 0:
+            if remain > 1:
                 logger.error('已忽略余下的 %d 次战斗', remain - 1)
 
         return c_id, remain
@@ -276,6 +307,9 @@ class ArknightsHelper(object):
         prepare_reco: dict = None
 
     def operation_once_statemachine(self, c_id):
+        import imgreco.before_operation
+        import imgreco.end_operation
+
         smobj = ArknightsHelper.operation_once_state()
         def on_prepare(smobj):
             count_times = 0
@@ -308,7 +342,7 @@ class ArknightsHelper(object):
                 logger.error(ap_text + '不足 无法继续')
                 if recoresult['consume_ap'] and self.can_perform_refill():
                     logger.info('尝试回复理智')
-                    self.tap_rect(imgreco.before_operation.get_start_operation_rect(self.viewport))
+                    self.tap_rect(recoresult['start_button'])
                     self.__wait(SMALL_WAIT)
                     screenshot = self.adb.screenshot()
                     refill_type = imgreco.before_operation.check_ap_refill_type(screenshot)
@@ -335,11 +369,11 @@ class ArknightsHelper(object):
 
             if not recoresult['delegated']:
                 logger.info('设置代理指挥')
-                self.tap_rect(imgreco.before_operation.get_delegate_rect(self.viewport))
+                self.tap_rect(recoresult['delegate_button'])
                 return  # to on_prepare state
 
             logger.info("理智充足 开始行动")
-            self.tap_rect(imgreco.before_operation.get_start_operation_rect(self.viewport))
+            self.tap_rect(recoresult['start_button'])
             smobj.prepare_reco = recoresult
             smobj.state = on_troop
 
@@ -371,12 +405,11 @@ class ArknightsHelper(object):
                 else:
                     wait_time = sum(self.operation_time) / len(self.operation_time) - 7
                 logger.info('等待 %d s' % wait_time)
-                self.__wait(wait_time, MANLIKE_FLAG=False)
+                self.__wait(wait_time, MANLIKE_FLAG=False, allow_skip=True)
                 smobj.first_wait = False
             t = monotonic() - smobj.operation_start
 
             logger.info('已进行 %.1f s，判断是否结束', t)
-
             screenshot = self.adb.screenshot()
             if imgreco.end_operation.check_level_up_popup(screenshot):
                 logger.info("等级提升")
@@ -384,23 +417,13 @@ class ArknightsHelper(object):
                 smobj.state = on_level_up_popup
                 return
 
-            if smobj.prepare_reco['consume_ap']:
-                tar = imgreco.common.find_target(screenshot, "end_operation/recordtime.png", 0.9, False)
-                if tar:
-                    logger.info('剿灭战斗结束')
-                    self.operation_time.append(t)
-                    self.tap_rect(tar)
-                    self.__wait(MEDIUM_WAIT)
+            end_flag = imgreco.end_operation.check_end_operation(smobj.prepare_reco['style'], not smobj.prepare_reco['no_friendship'], screenshot)
+            if not end_flag and t > 300:
+                if imgreco.end_operation.check_end_operation2(screenshot):
+                    self.tap_rect(imgreco.end_operation.get_end2_rect(screenshot))
                     screenshot = self.adb.screenshot()
-                    if imgreco.common.find_target(screenshot, "end_operation/weeklyreport.png"):
-                        smobj.state = on_end_operation
-                        return
-
-            if smobj.prepare_reco['consume_ap']:
-                detector = imgreco.end_operation.check_end_operation
-            else:
-                detector = imgreco.end_operation.check_end_operation_alt
-            if detector(screenshot):
+                    end_flag = imgreco.end_operation.check_end_operation_main(screenshot)
+            if end_flag:
                 logger.info('战斗结束')
                 self.operation_time.append(t)
                 crop = imgreco.end_operation.get_still_check_rect(self.viewport)
@@ -411,6 +434,7 @@ class ArknightsHelper(object):
             if dlgtype is not None:
                 if dlgtype == 'yesno' and '代理指挥' in ocrresult:
                     logger.warning('代理指挥出现失误')
+                    self.frontend.alert('代理指挥', '代理指挥出现失误', 'warn')
                     smobj.mistaken_delegation = True
                     if config.get('behavior/mistaken_delegation/settle', False):
                         logger.info('以 2 星结算关卡')
@@ -436,7 +460,7 @@ class ArknightsHelper(object):
                     raise RuntimeError('unhandled dialog')
 
             logger.info('战斗未结束')
-            self.__wait(BATTLE_FINISH_DETECT)
+            self.__wait(BATTLE_FINISH_DETECT, allow_skip=True)
 
         def on_level_up_popup(smobj):
             self.__wait(SMALL_WAIT, MANLIKE_FLAG=True)
@@ -452,7 +476,7 @@ class ArknightsHelper(object):
             reportresult = penguin_stats.reporter.ReportResult.NotReported
             try:
                 # 掉落识别
-                drops = imgreco.end_operation.recognize(screenshot)
+                drops = imgreco.end_operation.recognize(smobj.prepare_reco['style'], screenshot)
                 logger.debug('%s', repr(drops))
                 logger.info('掉落识别结果：%s', format_recoresult(drops))
                 log_total = len(self.loots)
@@ -460,6 +484,8 @@ class ArknightsHelper(object):
                     for name, qty in group:
                         if name is not None and qty is not None:
                             self.loots[name] = self.loots.get(name, 0) + qty
+                self.frontend.notify("combat-result", drops)
+                self.frontend.notify("loots", self.loots)
                 if log_total:
                     self.log_total_loots()
                 if self.use_penguin_report:
@@ -562,10 +588,8 @@ class ArknightsHelper(object):
                       set_count=1000):  # 作战次数
         logger.debug("helper.module_battle")
         c_id = c_id.upper()
-        if config.get('behavior/use_ocr_goto_stage', False) and stage_path.is_stage_supported_ocr(c_id):
+        if stage_path.is_stage_supported_ocr(c_id):
             self.goto_stage_by_ocr(c_id)
-        elif stage_path.is_stage_supported(c_id):
-            self.goto_stage(c_id)
         else:
             logger.error('不支持的关卡：%s', c_id)
             raise ValueError(c_id)
@@ -625,6 +649,7 @@ class ArknightsHelper(object):
         self.__wait(SMALL_WAIT)
 
     def recruit(self):
+        import imgreco.recruit
         from . import recruit_calc
         logger.info('识别招募标签')
         tags = imgreco.recruit.get_recruit_tags(self.adb.screenshot())
@@ -634,6 +659,7 @@ class ArknightsHelper(object):
         return result
 
     def recruit_add(self):
+        import imgreco.recruit
         from . import recruit_calc
 
         screenshot = self.adb.screenshot()
@@ -842,9 +868,10 @@ class ArknightsHelper(object):
             screenshot = self.adb.screenshot()
             current_episode_tag = screenshot.crop(episode_tag_rect)
             current_episode_str = imgreco.stage_ocr.do_img_ocr(current_episode_tag)
-            current_episode = int(current_episode_str[7:])
             logger.info(f'当前章节: {current_episode_str}')
+            current_episode = int(current_episode_str[7:])
 
+        logger.info(f'进入章节: {current_episode_str}')
         self.tap_rect(current_ep_rect)
 
     def find_and_tap_stage_by_ocr(self, partition, target, partition_map=None):
@@ -857,6 +884,11 @@ class ArknightsHelper(object):
         while True:
             screenshot = self.adb.screenshot()
             tags_map = imgreco.stage_ocr.recognize_all_screen_stage_tags(screenshot)
+            if not tags_map:
+                tags_map = imgreco.stage_ocr.recognize_all_screen_stage_tags(screenshot, allow_extra_icons=True)
+                if not tags_map:
+                    logger.error('未能定位关卡地图')
+                    raise RuntimeError('recognition failed')
             logger.debug('tags map: ' + repr(tags_map))
             pos = tags_map.get(target)
             if pos:
@@ -892,34 +924,22 @@ class ArknightsHelper(object):
             self.tap_rect((*(pos - offset), *(pos + offset)))
         else:
             if recursion == 0:
-                logger.info('目标可能在可视区域右侧，向左拖动')
                 originX = self.viewport[0] // 2 + randint(-100, 100)
                 originY = self.viewport[1] // 2 + randint(-100, 100)
-                self.adb.touch_swipe2((originX, originY), (-self.viewport[0] * 0.2, 0), 400)
+                if partition == 'material':
+                    logger.info('目标可能在可视区域左侧，向右拖动')
+                    offset = self.viewport[0] * 0.2
+                elif partition == 'soc':
+                    logger.info('目标可能在可视区域右侧，向左拖动')
+                    offset = -self.viewport[0] * 0.2
+                else:
+                    logger.error('未知类别')
+                    raise StopIteration()
+                self.adb.touch_swipe2((originX, originY), (offset, 0), 400)
                 self.__wait(2)
                 self.find_and_tap_daily(partition, target, recursion=recursion+1)
             else:
                 logger.error('未找到目标，是否未开放关卡？')
-
-    def goto_stage(self, stage):
-        if not stage_path.is_stage_supported(stage):
-            logger.error('不支持的关卡：%s', stage)
-            raise ValueError(stage)
-        path = stage_path.get_stage_path(stage)
-        self.back_to_main()
-        logger.info('进入作战')
-        self.tap_quadrilateral(imgreco.main.get_ballte_corners(self.adb.screenshot()))
-        self.__wait(3)
-        if path[0] == 'main':
-            self.find_and_tap('episodes', path[1])
-            self.find_and_tap(path[1], path[2])
-        elif path[0] == 'material' or path[0] == 'soc':
-            logger.info('选择类别')
-            self.tap_rect(imgreco.map.get_daily_menu_entry(self.viewport, path[0]))
-            self.find_and_tap_daily(path[0], path[1])
-            self.find_and_tap(path[1], path[2])
-        else:
-            raise NotImplementedError()
 
     def goto_stage_by_ocr(self, stage):
         path = stage_path.get_stage_path(stage)
@@ -1557,8 +1577,8 @@ class ArknightsHelper(object):
 
     def create_custom_record(self, record_name, roi_size=64, wait_seconds_after_touch=1,
                              description='', back_to_main=True, prefer_mode='match_template', threshold=0.7):
-        # FIXME 检查设备是否有 root 权限
-        record_dir = os.path.join('custom_record/', record_name)
+        record_dir = os.path.join(os.path.realpath(os.path.join(__file__, '../../')),
+                                  os.path.join('custom_record/', record_name))
         if os.path.exists(record_dir):
             c = input('已存在同名的记录, y 覆盖, n 退出: ')
             if c.strip().lower() != 'y':
@@ -1582,7 +1602,7 @@ class ArknightsHelper(object):
         }
         half_roi = roi_size // 2
         logger.info('滑动屏幕以退出录制.')
-        logger.info('start recording...')
+        logger.info('开始录制, 请点击相关区域...')
         sock = self.adb.device_session_factory().shell_stream('getevent')
         f = sock.makefile('rb')
         while True:
@@ -1631,15 +1651,15 @@ class ArknightsHelper(object):
                 logger.info(f'record: {record}')
                 records.append(record)
                 if wait_seconds_after_touch:
-                    logger.info(f'wait {wait_seconds_after_touch}s...')
+                    logger.info(f'请等待 {wait_seconds_after_touch}s...')
                     self.__wait(wait_seconds_after_touch)
 
-                logger.info('go ahead...')
+                logger.info('继续...')
             elif len(point_list) > 1:
                 # 滑动时跳出循环
                 c = input('是否退出录制[Y/n]:')
                 if c.strip().lower() != 'n':
-                    logger.info('stop recording...')
+                    logger.info('停止录制...')
                     break
                 else:
                     # todo 处理屏幕滑动
@@ -1649,7 +1669,8 @@ class ArknightsHelper(object):
 
     def replay_custom_record(self, record_name, mode=None, back_to_main=None):
         from PIL import Image
-        record_dir = os.path.join('custom_record/', record_name)
+        record_dir = os.path.join(os.path.realpath(os.path.join(__file__, '../../')),
+                                  os.path.join('custom_record/', record_name))
         if not os.path.exists(record_dir):
             logger.error(f'未找到相应的记录: {record_name}')
             raise RuntimeError(f'未找到相应的记录: {record_name}')

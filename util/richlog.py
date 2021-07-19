@@ -25,6 +25,13 @@ class RichLogger:
         self.f.write(b'<p><img src="data:image/png;base64,%s" /></p>\n' % imgb64)
         self.f.flush()
 
+    def logfig(self, fig):
+        # matplotlib figure
+        buf = BytesIO()
+        fig.savefig(buf, format='svg')
+        self.f.write(buf.getvalue())
+        self.f.flush()
+
     def logtext(self, text):
         self.ensure_file()
         self.loghtml('<pre>%s</pre>\n' % text)
@@ -38,9 +45,9 @@ class RichLogger:
 @lru_cache(maxsize=None)
 def get_logger(module):
     import config
-    if config.instanceid == 0:
+    if config.get_instance_id() == 0:
         filename = '%s.html' % module
     else:
-        filename = '%s.%d.html' % (module, config.instanceid)
+        filename = '%s.%d.html' % (module, config.get_instance_id())
     logger = RichLogger(os.path.join(config.logs, filename), True)
     return logger

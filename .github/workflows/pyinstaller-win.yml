@@ -1,4 +1,4 @@
-name: make PyInstaller packaged release
+name: Windows binary package
 
 on:
   push:
@@ -19,11 +19,12 @@ jobs:
         python -m pip install --upgrade pip
         python -m venv venv32
         venv32\Scripts\pip install -r requirements.txt
-        venv32\Scripts\pip install pyinstaller==4.0
+        venv32\Scripts\pip install pyinstaller
       shell: cmd
     - name: Make package
+      shell: cmd
       run: |
-        venv32\Scripts\python packaging/makepackage.py --version-suffix -ci
+        venv32\Scripts\python packaging/makepackage.py --version-suffix -ci-%GITHUB_RUN_NUMBER%
     - name: Upload artifact
       uses: actions/upload-artifact@v2.1.4
       with:
@@ -44,11 +45,12 @@ jobs:
         python -m pip install --upgrade pip
         python -m venv venv64
         venv64\Scripts\pip install -r requirements.txt
-        venv64\Scripts\pip install pyinstaller==4.0
+        venv64\Scripts\pip install pyinstaller
       shell: cmd
     - name: Make package
+      shell: cmd
       run: |
-        venv64\Scripts\python packaging/makepackage.py --version-suffix -ci
+        venv64\Scripts\python packaging/makepackage.py --version-suffix -ci-%GITHUB_RUN_NUMBER%
     - name: Upload artifact
       uses: actions/upload-artifact@v2.1.4
       with:

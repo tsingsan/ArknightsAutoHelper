@@ -15,16 +15,16 @@ if __name__ == '__main__':
     curHour = int(time.ctime()[-13:-11])
 
     do_battle = sys.argv[1] != "nobattle" if len(sys.argv) > 1 else True
-    do_ce_5 = False# weekDay == "Thu" or weekDay == "Sat" or weekDay == "Sun"
-    do_ca_5 = False# weekDay == "Tue" or weekDay == "Wed" or weekDay == "Fri"
+    do_ce_5 = weekDay == "Thu" or weekDay == "Sat" or weekDay == "Sun"
+    do_ca_5 = weekDay == "Tue" or weekDay == "Wed" or weekDay == "Fri"
     do_activity_stages = []
 
-    helper = _create_helper()
+    helper, context = _create_helper()
     helper.use_refill = True
     helper.refill_with_item = True
     helper.refill_with_item_close_time_only = True
 
-    with helper._shellng_context:
+    with context:
         if do_battle:
             if len(do_activity_stages) > 0:
                 helper.repeat_last_stage(do_activity_stages, 99)
